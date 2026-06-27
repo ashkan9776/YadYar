@@ -44,5 +44,6 @@ app.*.map.json
 /android/app/profile
 /android/app/release
 
-# Claude Code local settings & memory (not part of the project)
+# Claude Code local settings, memory & guidance (not part of the project)
 .claude/
+CLAUDE.md
