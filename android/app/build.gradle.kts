@@ -5,7 +5,7 @@ plugins {
 }
 
 android {
-    namespace = "com.example.yadyar"
+    namespace = "com.ahoura.yadyar"
     compileSdk = flutter.compileSdkVersion
     ndkVersion = flutter.ndkVersion
 
@@ -17,7 +17,7 @@ android {
     }
 
     defaultConfig {
-        applicationId = "com.example.yadyar"
+        applicationId = "com.ahoura.yadyar"
         // flutter_local_notifications نسخه ۲۲ به minSdk ۲۴ یا بالاتر نیاز دارد.
         minSdk = maxOf(flutter.minSdkVersion, 24)
         targetSdk = flutter.targetSdkVersion

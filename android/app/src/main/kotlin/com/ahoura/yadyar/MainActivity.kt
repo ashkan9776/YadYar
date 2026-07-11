@@ -1,4 +1,4 @@
-package com.example.yadyar
+package com.ahoura.yadyar
 
 import io.flutter.embedding.android.FlutterActivity
 
