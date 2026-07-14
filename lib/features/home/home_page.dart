@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../core/celebrations/celebration_overlay.dart';
 import '../../core/persian.dart';
 import '../../core/theme/app_colors.dart';
 import '../../domain/gamification.dart';
@@ -10,16 +11,32 @@ import '../../providers/providers.dart';
 import '../review/review_controller.dart';
 
 /// صفحه‌ی خانه — اولین چیزی که کاربر هر روز می‌بیند.
-class HomePage extends ConsumerWidget {
+class HomePage extends ConsumerStatefulWidget {
   const HomePage({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<HomePage> createState() => _HomePageState();
+}
+
+class _HomePageState extends ConsumerState<HomePage> {
+  /// آخرین سطحی که مشاهده شده — اگر تغییر کند، جشن لول‌آپ نمایش داده می‌شود.
+  int _lastSeenLevel = -1;
+
+  @override
+  Widget build(BuildContext context) {
     final due = ref.watch(totalDueProvider);
     final stats = ref.watch(statsProvider);
     final goal = ref.watch(settingsProvider).dailyGoal;
     final weakCount = ref.watch(weakCardsProvider).length;
     final level = ref.watch(levelProvider);
+
+    // بررسی لول‌آپ: فقط وقتی سطح جدیدی کشف شود (نه اولین بار).
+    if (_lastSeenLevel >= 1 && level.level > _lastSeenLevel) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        CelebrationOverlay.showLevelUp(context, level.level);
+      });
+    }
+    _lastSeenLevel = level.level;
 
     return Scaffold(
       body: SafeArea(
@@ -115,11 +132,21 @@ class _Header extends StatelessWidget {
                   color: Colors.white,
                 ),
               ),
-              IconButton(
-                onPressed: () => context.push('/settings'),
-                icon: const Icon(Icons.settings_outlined, color: Colors.white),
-                tooltip: 'تنظیمات',
-                visualDensity: VisualDensity.compact,
+              Row(
+                children: [
+                  IconButton(
+                    onPressed: () => context.push('/search'),
+                    icon: const Icon(Icons.search_rounded, color: Colors.white),
+                    tooltip: 'جستجو',
+                    visualDensity: VisualDensity.compact,
+                  ),
+                  IconButton(
+                    onPressed: () => context.push('/settings'),
+                    icon: const Icon(Icons.settings_outlined, color: Colors.white),
+                    tooltip: 'تنظیمات',
+                    visualDensity: VisualDensity.compact,
+                  ),
+                ],
               ),
             ],
           ),

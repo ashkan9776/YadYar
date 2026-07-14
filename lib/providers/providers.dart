@@ -13,6 +13,7 @@ import '../domain/activity.dart';
 import '../domain/gamification.dart';
 import '../domain/study_stats.dart';
 import '../domain/weak_cards.dart';
+import '../core/home_widget_service.dart';
 
 /// نمونه‌ی دیتابیس — در main هنگام راه‌اندازی override می‌شود.
 final databaseProvider = Provider<AppDatabase>(
@@ -89,6 +90,13 @@ final totalDueProvider = Provider<int>((ref) {
   final cards = ref.watch(allCardsStreamProvider).value ?? const [];
   final now = DateTime.now();
   return cards.where((c) => c.isDueAt(now)).length;
+});
+
+/// هماهنگی تعداد سررسیدها با ویجت صفحه‌ی خانه — side-effect provider.
+/// روی هر تغییر `totalDueProvider`، ویجت را به‌روز می‌کند.
+final homeWidgetSyncProvider = Provider<void>((ref) {
+  final due = ref.watch(totalDueProvider);
+  HomeWidgetService.updateDueCount(due);
 });
 
 /// آمار مطالعه‌ی محاسبه‌شده.

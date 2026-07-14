@@ -9,5 +9,9 @@
 # جلوگیری از حذف کلاس‌های مدلِ موردنیاز GSON.
 -keep class com.google.gson.** { *; }
 
+# نگه‌داشتن کلاس‌های ویجت صفحه‌ی خانه (با نام صریح ارجاع داده می‌شوند).
+-keep class com.ahoura.yadyar.YadyarWidgetProvider { *; }
+-keep class es.antonborri.home_widget.** { *; }
+
 # هشدارهای بی‌اهمیتِ کلاس‌های اختیاری را نادیده بگیر.
 -dontwarn com.google.errorprone.annotations.**

@@ -1,21 +1,43 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../core/celebrations/celebration_overlay.dart';
 import '../../core/persian.dart';
 import '../../core/theme/app_colors.dart';
 import '../../domain/gamification.dart';
 import '../../providers/providers.dart';
 
 /// داشبورد آمار پیشرفت.
-class StatsPage extends ConsumerWidget {
+class StatsPage extends ConsumerStatefulWidget {
   const StatsPage({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<StatsPage> createState() => _StatsPageState();
+}
+
+class _StatsPageState extends ConsumerState<StatsPage> {
+  /// شناسه‌های دستاوردهایی که قبلاً باز شده و جشنشان نمایش داده شده.
+  final Set<String> _celebratedIds = {};
+
+  @override
+  Widget build(BuildContext context) {
     final stats = ref.watch(statsProvider);
     final forecast = ref.watch(forecastProvider);
     final activity = ref.watch(dailyActivityProvider);
     final achievements = ref.watch(achievementsProvider);
+
+    // بررسی دستاوردهای جدید — اگر دستاوردی تازه باز شده، جشن نمایش بده.
+    for (final a in achievements) {
+      if (a.unlocked && !_celebratedIds.contains(a.id)) {
+        _celebratedIds.add(a.id);
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (mounted) {
+            CelebrationOverlay.showAchievement(
+                context, a.title, a.description);
+          }
+        });
+      }
+    }
 
     return Scaffold(
       appBar: AppBar(

@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- لایه‌ی ویجت یادیار — تعداد کارت‌های سررسید امروز. -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/widget_root"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="horizontal"
+    android:layoutDirection="rtl"
+    android:gravity="center_vertical"
+    android:padding="16dp"
+    android:background="@drawable/widget_background">
+
+    <!-- آیکون اپ -->
+    <ImageView
+        android:id="@+id/widget_icon"
+        android:layout_width="40dp"
+        android:layout_height="40dp"
+        android:src="@mipmap/ic_launcher"
+        android:contentDescription="@null" />
+
+    <!-- متن: تعداد + برچسب -->
+    <LinearLayout
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
+        android:layout_marginStart="14dp"
+        android:layout_marginEnd="14dp"
+        android:orientation="vertical">
+
+        <!-- عدد سررسیدها -->
+        <TextView
+            android:id="@+id/widget_due_count"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="۰"
+            android:textColor="#FF7F77DD"
+            android:textSize="28sp"
+            android:textStyle="bold"
+            android:fontFamily="@font/vazirmatn_bold" />
+
+        <!-- برچسب توضیحی -->
+        <TextView
+            android:id="@+id/widget_label"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="کارت منتظرته"
+            android:textColor="#FF9A97B8"
+            android:textSize="12sp"
+            android:fontFamily="@font/vazirmatn" />
+    </LinearLayout>
+
+    <!-- آیکون فلش -->
+    <ImageView
+        android:layout_width="24dp"
+        android:layout_height="24dp"
+        android:src="@android:drawable/ic_media_play"
+        android:rotation="180"
+        android:contentDescription="@null" />
+
+</LinearLayout>

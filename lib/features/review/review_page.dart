@@ -35,6 +35,7 @@ class ReviewPage extends ConsumerWidget {
             hard: state.hard,
             good: state.good,
             easy: state.easy,
+            focusEnded: state.focusEnded,
           ),
           const Positioned.fill(child: ConfettiBurst()),
         ],
@@ -47,12 +48,27 @@ class ReviewPage extends ConsumerWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('مرور'),
+        title: state.focusActive
+            ? _FocusTitle(seconds: state.focusRemainingSeconds)
+            : const Text('مرور'),
         leading: IconButton(
           icon: const Icon(Icons.close_rounded),
           onPressed: () => context.pop(),
         ),
         actions: [
+          // دکمه‌ی تمرکز — فقط وقتی نشست شروع شده و هنوز فعال نیست.
+          if (state.focusActive)
+            IconButton(
+              icon: const Icon(Icons.timer_off_rounded),
+              tooltip: 'توقف تمرکز',
+              onPressed: controller.stopFocus,
+            )
+          else if (!state.finished && state.cards.isNotEmpty)
+            IconButton(
+              icon: const Icon(Icons.timer_outlined),
+              tooltip: 'حالت تمرکز',
+              onPressed: () => _showFocusSheet(context, controller),
+            ),
           if (state.canUndo && !state.finished && !typedMode)
             IconButton(
               icon: const Icon(Icons.undo_rounded),
@@ -74,6 +90,114 @@ class ReviewPage extends ConsumerWidget {
             : null,
       ),
       body: SafeArea(child: body),
+    );
+  }
+
+  /// نمایش شیت انتخاب مدت زمان تمرکز.
+  void _showFocusSheet(BuildContext context, ReviewController controller) {
+    showModalBottomSheet(
+      context: context,
+      showDragHandle: true,
+      builder: (ctx) {
+        final c = Theme.of(ctx).extension<AppPalette>()!;
+        return Padding(
+          padding: const EdgeInsets.fromLTRB(20, 0, 20, 28),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Text('حالت تمرکز 🔥',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.w700,
+                      color: c.textPrimary)),
+              const SizedBox(height: 6),
+              Text('یه زمان انتخاب کن و بدون حواس‌پرتی مرور کن',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(fontSize: 12, color: c.textMuted)),
+              const SizedBox(height: 20),
+              for (final minutes in [5, 10, 15])
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 10),
+                  child: _FocusDurationTile(
+                    minutes: minutes,
+                    onTap: () {
+                      controller.startFocus(minutes);
+                      Navigator.pop(ctx);
+                    },
+                  ),
+                ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+}
+
+/// عنوان تایمر تمرکز در AppBar — «MM:SS» فارسی با آیکون 🔥.
+class _FocusTitle extends StatelessWidget {
+  const _FocusTitle({required this.seconds});
+  final int seconds;
+
+  @override
+  Widget build(BuildContext context) {
+    final m = (seconds ~/ 60).toString().padLeft(2, '0');
+    final s = (seconds % 60).toString().padLeft(2, '0');
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Icon(Icons.local_fire_department_rounded,
+            color: context.colors.amber, size: 20),
+        const SizedBox(width: 6),
+        Text('${Fa.digits(m)}:${Fa.digits(s)}',
+            style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w700,
+                color: context.colors.amber,
+                fontFeatures: const [FontFeature.tabularFigures()])),
+      ],
+    );
+  }
+}
+
+/// گزینه‌ی مدت زمان تمرکز در شیت.
+class _FocusDurationTile extends StatelessWidget {
+  const _FocusDurationTile({required this.minutes, required this.onTap});
+  final int minutes;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final c = context.colors;
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(14),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 16),
+        decoration: BoxDecoration(
+          color: c.amber.withValues(alpha: 0.10),
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(color: c.amber.withValues(alpha: 0.3)),
+        ),
+        child: Row(
+          children: [
+            Icon(Icons.timer_rounded, color: c.amber, size: 24),
+            const SizedBox(width: 14),
+            Expanded(
+              child: Text(
+                '${Fa.digits(minutes)} دقیقه',
+                style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w600,
+                    color: c.textPrimary),
+              ),
+            ),
+            Icon(Icons.chevron_left_rounded, color: c.amber),
+          ],
+        ),
+      ),
     );
   }
 }
@@ -421,11 +545,16 @@ class _RateButton extends StatelessWidget {
 }
 
 class _SummaryView extends ConsumerWidget {
-  const _SummaryView(
-      {required this.hard, required this.good, required this.easy});
+  const _SummaryView({
+    required this.hard,
+    required this.good,
+    required this.easy,
+    this.focusEnded = false,
+  });
   final int hard;
   final int good;
   final int easy;
+  final bool focusEnded;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -437,12 +566,14 @@ class _SummaryView extends ConsumerWidget {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          const Text('🎉', style: TextStyle(fontSize: 56)),
+          Text(focusEnded ? '🔥' : '🎉', style: const TextStyle(fontSize: 56)),
           const SizedBox(height: 16),
-          const Text('آفرین! مرور تمام شد',
-              style: TextStyle(fontSize: 22, fontWeight: FontWeight.w700)),
+          Text(
+            focusEnded ? 'زمان تمرکز تمام شد!' : 'آفرین! مرور تمام شد',
+            style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w700),
+          ),
           const SizedBox(height: 8),
-          Text('${Fa.digits(total)} کارت رو امروز مرور کردی',
+          Text('${Fa.digits(total)} کارت رو مرور کردی',
               style: TextStyle(color: context.colors.textSecondary)),
           const SizedBox(height: 24),
           _GoalProgress(done: todayReviewed, goal: goal),

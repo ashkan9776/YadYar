@@ -3,7 +3,7 @@ import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:timezone/data/latest_all.dart' as tzdata;
 import 'package:timezone/timezone.dart' as tz;
 
-/// سرویس نوتیفیکیشن محلی: یادآوری روزانه‌ی مرور + یادآوری هوشمند حفظ استریک.
+/// سرویس نوتیفیکیشن محلی: یادآوری روزانه، هشدار استریک، لول‌آپ و دستاورد.
 class NotificationService {
   NotificationService._();
   static final instance = NotificationService._();
@@ -11,9 +11,11 @@ class NotificationService {
   final _plugin = FlutterLocalNotificationsPlugin();
   bool _ready = false;
 
-  // شناسه‌ی نوتیفیکیشن‌ها.
+  // شناسه‌ی نوتیفیکیشن‌ها — بازه‌ی مجزا برای هر نوع.
   static const _dailyId = 1001; // یادآوری روزانه‌ی تکرارشونده
-  static const _streakId = 1002; // هشدار یک‌بار‌مصرف حفظ استریک
+  static const _streakId = 1002; // هشدار یک‌بارمصرف حفظ استریک
+  static const _levelUpId = 2001; // لول‌آپ
+  static const _achievementId = 2002; // آنلاک دستاورد
 
   /// ساعت «آخرین فرصت» برای هشدار استریک (شب).
   static const streakGuardHour = 21;
@@ -42,24 +44,41 @@ class NotificationService {
     }
   }
 
-  static const _dailyDetails = NotificationDetails(
-    android: AndroidNotificationDetails(
-      'daily_review',
-      'یادآوری مرور روزانه',
-      channelDescription: 'یادآوری برای انجام مرور فلش‌کارت‌ها',
-      importance: Importance.high,
-      priority: Priority.high,
-    ),
+  /// سبک مشترک نوتیفیکیشن‌های فارسی — BigTextStyle برای نمایش کامل متن.
+  static NotificationDetails _persianDetails({
+    required String channelId,
+    required String channelName,
+    required String channelDescription,
+  }) {
+    return NotificationDetails(
+      android: AndroidNotificationDetails(
+        channelId,
+        channelName,
+        channelDescription: channelDescription,
+        importance: Importance.high,
+        priority: Priority.high,
+        styleInformation: const BigTextStyleInformation(''),
+        // نمایش فارسی درست — اندروید ۱۳+ از فونت اپ استفاده می‌کند.
+      ),
+    );
+  }
+
+  static final _dailyDetails = _persianDetails(
+    channelId: 'daily_review',
+    channelName: 'یادآوری مرور روزانه',
+    channelDescription: 'یادآوری برای انجام مرور فلش‌کارت‌ها',
   );
 
-  static const _streakDetails = NotificationDetails(
-    android: AndroidNotificationDetails(
-      'streak_guard',
-      'حفظ استریک',
-      channelDescription: 'هشدار وقتی استریک روزانه در خطر از دست رفتن است',
-      importance: Importance.high,
-      priority: Priority.high,
-    ),
+  static final _streakDetails = _persianDetails(
+    channelId: 'streak_guard',
+    channelName: 'حفظ استریک',
+    channelDescription: 'هشدار وقتی استریک روزانه در خطر از دست رفتن است',
+  );
+
+  static final _celebrationDetails = _persianDetails(
+    channelId: 'celebration',
+    channelName: 'جشن و دستاورد',
+    channelDescription: 'لول‌آپ و آنلاک دستاوردها',
   );
 
   /// نمایش فوری یک نوتیفیکیشن نمونه تا کاربر روی گوشی صحت کار را ببیند.
@@ -74,6 +93,37 @@ class NotificationService {
       );
     } catch (e) {
       debugPrint('showTestNotification failed: $e');
+    }
+  }
+
+  /// نمایش نوتیفیکیشن لول‌آپ — پس از ثبت مرور که سطح جدیدی باز می‌شود.
+  Future<void> showLevelUpNotification(int newLevel) async {
+    if (!_ready) await init();
+    try {
+      await _plugin.show(
+        id: _levelUpId,
+        title: 'لول‌آپ! 🎉',
+        body: 'تبریک! به سطح $newLevel رسیدی. ادامه بده! 💪',
+        notificationDetails: _celebrationDetails,
+      );
+    } catch (e) {
+      debugPrint('showLevelUpNotification failed: $e');
+    }
+  }
+
+  /// نمایش نوتیفیکیشن آنلاک دستاورد.
+  Future<void> showAchievementNotification(
+      String title, String description) async {
+    if (!_ready) await init();
+    try {
+      await _plugin.show(
+        id: _achievementId,
+        title: 'دستاورد جدید! 🏆',
+        body: '$title — $description',
+        notificationDetails: _celebrationDetails,
+      );
+    } catch (e) {
+      debugPrint('showAchievementNotification failed: $e');
     }
   }
 
@@ -137,7 +187,7 @@ class NotificationService {
       // اگر زمان هشدار تا فردا فاصله دارد (یعنی امروز گذشته)، بهتر است امشب
       // مزاحم نشویم؛ ولی برای فردا هم برنامه‌ریزی نگه می‌داریم تا استریک حفظ شود.
       final body = streakDays >= 2
-          ? 'استریک $streakDaysروزه‌ت داره می‌پره! 🔥 فقط $dueCount کارت مونده.'
+          ? 'استریک $streakDays روزه‌ت داره می‌پره! 🔥 فقط $dueCount کارت مونده.'
           : 'امروز هنوز مرور نکردی — $dueCount کارت منتظرته 🔥';
       await _plugin.zonedSchedule(
         id: _streakId,

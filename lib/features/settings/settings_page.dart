@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../core/notifications.dart';
 import '../../core/persian.dart';
+import '../../core/sound.dart';
 import '../../core/theme/app_colors.dart';
 import '../../data/models/app_settings.dart';
 import '../../providers/providers.dart';
@@ -164,6 +166,63 @@ class SettingsPage extends ConsumerWidget {
                 value: settings.typedAnswerMode,
                 onChanged: (v) =>
                     _save(ref, settings.copyWith(typedAnswerMode: v)),
+              ),
+            ),
+            const SizedBox(height: 24),
+            _SectionLabel('صدا و لرزش'),
+            const SizedBox(height: 10),
+            _Card(
+              child: Column(
+                children: [
+                  SwitchListTile(
+                    contentPadding: EdgeInsets.zero,
+                    activeThumbColor: context.colors.accent,
+                    title: Text('افکت صوتی',
+                        style: TextStyle(
+                            fontSize: 15, color: context.colors.textPrimary)),
+                    subtitle: Text('صدای فلیپ، ارزیابی و جشن‌ها',
+                        style: TextStyle(
+                            fontSize: 12, color: context.colors.textMuted)),
+                    value: settings.soundEnabled,
+                    onChanged: (v) {
+                      SoundService.instance.enabled = v;
+                      _save(ref, settings.copyWith(soundEnabled: v));
+                    },
+                  ),
+                  Divider(height: 1, color: context.colors.border),
+                  SwitchListTile(
+                    contentPadding: EdgeInsets.zero,
+                    activeThumbColor: context.colors.accent,
+                    title: Text('لرزش (هپتیک)',
+                        style: TextStyle(
+                            fontSize: 15, color: context.colors.textPrimary)),
+                    subtitle: Text('لرزش دستگاه هنگام ارزیابی و فلیپ',
+                        style: TextStyle(
+                            fontSize: 12, color: context.colors.textMuted)),
+                    value: settings.hapticsEnabled,
+                    onChanged: (v) =>
+                        _save(ref, settings.copyWith(hapticsEnabled: v)),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 24),
+            _SectionLabel('داده'),
+            const SizedBox(height: 10),
+            _Card(
+              child: ListTile(
+                contentPadding: EdgeInsets.zero,
+                onTap: () => context.push('/data'),
+                leading: Icon(Icons.cloud_upload_outlined,
+                    color: context.colors.accent),
+                title: Text('مدیریت داده',
+                    style: TextStyle(
+                        fontSize: 15, color: context.colors.textPrimary)),
+                subtitle: Text('پشتیبان‌گیری، بازیابی و حذف داده‌ها',
+                    style: TextStyle(
+                        fontSize: 12, color: context.colors.textMuted)),
+                trailing: Icon(Icons.chevron_left_rounded,
+                    color: context.colors.textMuted),
               ),
             ),
             const SizedBox(height: 24),
