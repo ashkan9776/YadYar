@@ -8,9 +8,8 @@ import 'package:home_widget/home_widget.dart';
 class HomeWidgetService {
   HomeWidgetService._();
 
-  /// نام BroadcastReceiver ویجت (مطابق کاتلین).
-  static const _androidProvider =
-      'com.ahoura.yadyar.YadyarWidgetProvider';
+  /// نام BroadcastReceiver ویجت (نام کلاس ساده — پلاگین خودش packageName را اضافه می‌کند).
+  static const _androidProvider = 'YadyarWidgetProvider';
 
   /// کلید ذخیره‌ی تعداد سررسیدها در SharedPreferences مشترک.
   static const _dueCountKey = 'dueCount';

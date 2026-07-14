@@ -29,6 +29,8 @@ class _HomePageState extends ConsumerState<HomePage> {
     final goal = ref.watch(settingsProvider).dailyGoal;
     final weakCount = ref.watch(weakCardsProvider).length;
     final level = ref.watch(levelProvider);
+    // همگام‌سازی ویجت صفحه‌ی خانه با تعداد سررسیدها.
+    ref.watch(homeWidgetSyncProvider);
 
     // بررسی لول‌آپ: فقط وقتی سطح جدیدی کشف شود (نه اولین بار).
     if (_lastSeenLevel >= 1 && level.level > _lastSeenLevel) {

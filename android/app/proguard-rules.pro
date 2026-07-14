@@ -13,5 +13,10 @@
 -keep class com.ahoura.yadyar.YadyarWidgetProvider { *; }
 -keep class es.antonborri.home_widget.** { *; }
 
+# نگه‌داشتن کلاس‌های WorkManager (home_widget برای بک‌گراند از آن استفاده می‌کند).
+-keep class androidx.work.** { *; }
+-keep class androidx.datastore.** { *; }
+-dontwarn androidx.work.**
+
 # هشدارهای بی‌اهمیتِ کلاس‌های اختیاری را نادیده بگیر.
 -dontwarn com.google.errorprone.annotations.**
