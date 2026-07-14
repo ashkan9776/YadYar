@@ -9,5 +9,14 @@
 # جلوگیری از حذف کلاس‌های مدلِ موردنیاز GSON.
 -keep class com.google.gson.** { *; }
 
+# نگه‌داشتن کلاس‌های ویجت صفحه‌ی خانه (با نام صریح ارجاع داده می‌شوند).
+-keep class com.ahoura.yadyar.YadyarWidgetProvider { *; }
+-keep class es.antonborri.home_widget.** { *; }
+
+# نگه‌داشتن کلاس‌های WorkManager (home_widget برای بک‌گراند از آن استفاده می‌کند).
+-keep class androidx.work.** { *; }
+-keep class androidx.datastore.** { *; }
+-dontwarn androidx.work.**
+
 # هشدارهای بی‌اهمیتِ کلاس‌های اختیاری را نادیده بگیر.
 -dontwarn com.google.errorprone.annotations.**

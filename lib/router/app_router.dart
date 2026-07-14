@@ -1,12 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
+import '../features/data_management/data_management_page.dart';
 import '../features/decks/deck_detail_page.dart';
 import '../features/decks/deck_edit_page.dart';
 import '../features/decks/decks_page.dart';
 import '../features/home/home_page.dart';
 import '../features/quiz/quiz_page.dart';
 import '../features/review/review_page.dart';
+import '../features/search/search_page.dart';
 import '../features/settings/settings_page.dart';
 import '../features/shell/home_shell.dart';
 import '../features/stats/stats_page.dart';
@@ -73,6 +75,16 @@ final appRouter = GoRouter(
       parentNavigatorKey: _rootKey,
       builder: (_, state) =>
           DeckEditPage(deckId: int.parse(state.pathParameters['id']!)),
+    ),
+    GoRoute(
+      path: '/data',
+      parentNavigatorKey: _rootKey,
+      builder: (_, _) => const DataManagementPage(),
+    ),
+    GoRoute(
+      path: '/search',
+      parentNavigatorKey: _rootKey,
+      builder: (_, _) => const SearchPage(),
     ),
   ],
 );

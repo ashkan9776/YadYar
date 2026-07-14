@@ -1,8 +1,12 @@
+import 'dart:async';
+
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_riverpod/legacy.dart';
 
 import '../../core/notifications.dart';
+import '../../core/sound.dart';
+import '../../data/models/app_settings.dart';
 import '../../data/models/flashcard.dart';
 import '../../data/models/rating.dart';
 import '../../data/models/review_log.dart';
@@ -30,6 +34,10 @@ class ReviewState {
     this.canUndo = false,
     this.typedAnswer = '',
     this.typedCorrect = false,
+    this.focusActive = false,
+    this.focusRemainingSeconds = 0,
+    this.focusTotalSeconds = 0,
+    this.focusEnded = false,
   });
 
   final bool loading;
@@ -49,9 +57,23 @@ class ReviewState {
   /// آیا جوابِ تایپ‌شده درست بود؟
   final bool typedCorrect;
 
+  /// آیا حالت تمرکز فعال است؟
+  final bool focusActive;
+
+  /// ثانیه‌های باقیمانده‌ی تمرکز.
+  final int focusRemainingSeconds;
+
+  /// کل ثانیه‌های انتخاب‌شده برای تمرکز.
+  final int focusTotalSeconds;
+
+  /// آیا نشست به‌خاطر پایان زمان تمرکز تمام شده؟
+  final bool focusEnded;
+
   int get total => cards.length;
   int get position => index + 1;
-  bool get finished => !loading && index >= cards.length;
+
+  /// نشست تمام شده یا با رسیدن به انتهای صف یا با پایان زمان تمرکز.
+  bool get finished => !loading && (index >= cards.length || focusEnded);
   FlashCard? get current =>
       index < cards.length ? cards[index] : null;
   double get progress => total == 0 ? 0 : index / total;
@@ -67,6 +89,10 @@ class ReviewState {
     bool? canUndo,
     String? typedAnswer,
     bool? typedCorrect,
+    bool? focusActive,
+    int? focusRemainingSeconds,
+    int? focusTotalSeconds,
+    bool? focusEnded,
   }) {
     return ReviewState(
       loading: loading ?? this.loading,
@@ -79,6 +105,11 @@ class ReviewState {
       canUndo: canUndo ?? this.canUndo,
       typedAnswer: typedAnswer ?? this.typedAnswer,
       typedCorrect: typedCorrect ?? this.typedCorrect,
+      focusActive: focusActive ?? this.focusActive,
+      focusRemainingSeconds:
+          focusRemainingSeconds ?? this.focusRemainingSeconds,
+      focusTotalSeconds: focusTotalSeconds ?? this.focusTotalSeconds,
+      focusEnded: focusEnded ?? this.focusEnded,
     );
   }
 }
@@ -100,6 +131,8 @@ class _UndoEntry {
 
 class ReviewController extends StateNotifier<ReviewState> {
   ReviewController(this._ref, this.deckId) : super(const ReviewState()) {
+    // فعال‌سازی سرویس‌ها طبق تنظیمات فعلی.
+    SoundService.instance.enabled = settings.soundEnabled;
     _load();
   }
 
@@ -107,6 +140,10 @@ class ReviewController extends StateNotifier<ReviewState> {
   final int deckId;
   DateTime _cardShownAt = DateTime.now();
   final List<_UndoEntry> _undoStack = [];
+  Timer? _focusTimer;
+
+  bool get haptics => settings.hapticsEnabled;
+  AppSettings get settings => _ref.read(settingsProvider);
 
   Future<void> _load() async {
     final cardRepo = _ref.read(cardRepositoryProvider);
@@ -132,7 +169,8 @@ class ReviewController extends StateNotifier<ReviewState> {
 
   void flip() {
     if (state.showAnswer) return;
-    HapticFeedback.lightImpact();
+    if (haptics) HapticFeedback.lightImpact();
+    SoundService.instance.playFlip();
     state = state.copyWith(showAnswer: true);
   }
 
@@ -142,9 +180,11 @@ class ReviewController extends StateNotifier<ReviewState> {
     if (card == null || state.showAnswer) return;
     final correct = AnswerMatcher.matches(answer, card.back);
     if (correct) {
-      HapticFeedback.lightImpact();
+      if (haptics) HapticFeedback.lightImpact();
+      SoundService.instance.playClick();
     } else {
-      HapticFeedback.heavyImpact();
+      if (haptics) HapticFeedback.heavyImpact();
+      SoundService.instance.playWrong();
     }
     state = state.copyWith(
       showAnswer: true,
@@ -154,13 +194,15 @@ class ReviewController extends StateNotifier<ReviewState> {
   }
 
   /// در حالت تایپ پس از دیدن نتیجه: بر اساس درستیِ جواب امتیاز می‌دهد.
-  Future<void> continueTyped() => rate(state.typedCorrect ? Rating.good : Rating.hard);
+  Future<void> continueTyped() =>
+      rate(state.typedCorrect ? Rating.good : Rating.hard);
 
   Future<void> rate(Rating rating) async {
     final card = state.current;
     if (card == null) return;
 
-    HapticFeedback.mediumImpact();
+    if (haptics) HapticFeedback.mediumImpact();
+    SoundService.instance.playClick();
     // کاربر امروز مرور کرد → استریک امروز امن است، هشدار را لغو کن.
     NotificationService.instance.cancelStreakReminder();
 
@@ -235,6 +277,52 @@ class ReviewController extends StateNotifier<ReviewState> {
       typedAnswer: '',
       typedCorrect: false,
     );
+  }
+
+  // ─── حالت تمرکز ───────────────────────────────────────────────────────────
+
+  /// شروع حالت تمرکز با مدت زمان داده‌شده (دقیقه).
+  void startFocus(int minutes) {
+    if (state.finished) return;
+    final totalSeconds = minutes * 60;
+    _focusTimer?.cancel();
+    _focusTimer = Timer.periodic(const Duration(seconds: 1), (_) => _tickFocus());
+    state = state.copyWith(
+      focusActive: true,
+      focusRemainingSeconds: totalSeconds,
+      focusTotalSeconds: totalSeconds,
+    );
+  }
+
+  void _tickFocus() {
+    if (!state.focusActive) return;
+    final remaining = state.focusRemainingSeconds - 1;
+    if (remaining <= 0) {
+      // زمان تمام شد → نشست تمام می‌شود.
+      _focusTimer?.cancel();
+      _focusTimer = null;
+      SoundService.instance.playSuccess();
+      state = state.copyWith(
+        focusActive: false,
+        focusRemainingSeconds: 0,
+        focusEnded: true,
+      );
+    } else {
+      state = state.copyWith(focusRemainingSeconds: remaining);
+    }
+  }
+
+  /// توقف زودهنگام حالت تمرکز — نشست ادامه می‌یابد بدون محدودیت زمانی.
+  void stopFocus() {
+    _focusTimer?.cancel();
+    _focusTimer = null;
+    state = state.copyWith(focusActive: false);
+  }
+
+  @override
+  void dispose() {
+    _focusTimer?.cancel();
+    super.dispose();
   }
 }
 

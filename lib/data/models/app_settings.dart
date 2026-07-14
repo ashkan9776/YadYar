@@ -1,7 +1,7 @@
 /// حالت تم اپ. مقدار ذخیره‌شده در دیتابیس همین نام‌هاست.
 enum AppThemeMode { system, light, dark }
 
-/// تنظیمات کاربر — یادآوری روزانه، هدف مطالعه و تم.
+/// تنظیمات کاربر — یادآوری روزانه، هدف مطالعه، تم، صدا و لرزش.
 class AppSettings {
   const AppSettings({
     this.reminderEnabled = true,
@@ -10,6 +10,8 @@ class AppSettings {
     this.dailyGoal = 20,
     this.themeMode = AppThemeMode.dark,
     this.typedAnswerMode = false,
+    this.soundEnabled = true,
+    this.hapticsEnabled = true,
   });
 
   /// آیا یادآوری روزانه فعال است؟
@@ -28,6 +30,12 @@ class AppSettings {
   /// حالت «تایپ جواب» در مرور (به‌جای فلیپ و خودارزیابی).
   final bool typedAnswerMode;
 
+  /// آیا افکت‌های صوتی فعال هستند؟
+  final bool soundEnabled;
+
+  /// آیا لرزش (هپتیک) فعال است؟
+  final bool hapticsEnabled;
+
   static const defaults = AppSettings();
 
   AppSettings copyWith({
@@ -37,6 +45,8 @@ class AppSettings {
     int? dailyGoal,
     AppThemeMode? themeMode,
     bool? typedAnswerMode,
+    bool? soundEnabled,
+    bool? hapticsEnabled,
   }) {
     return AppSettings(
       reminderEnabled: reminderEnabled ?? this.reminderEnabled,
@@ -45,6 +55,8 @@ class AppSettings {
       dailyGoal: dailyGoal ?? this.dailyGoal,
       themeMode: themeMode ?? this.themeMode,
       typedAnswerMode: typedAnswerMode ?? this.typedAnswerMode,
+      soundEnabled: soundEnabled ?? this.soundEnabled,
+      hapticsEnabled: hapticsEnabled ?? this.hapticsEnabled,
     );
   }
 
@@ -55,6 +67,8 @@ class AppSettings {
         'dailyGoal': dailyGoal,
         'themeMode': themeMode.name,
         'typedAnswerMode': typedAnswerMode,
+        'soundEnabled': soundEnabled,
+        'hapticsEnabled': hapticsEnabled,
       };
 
   factory AppSettings.fromMap(Map<String, Object?> map) => AppSettings(
@@ -67,5 +81,7 @@ class AppSettings {
           orElse: () => AppThemeMode.dark,
         ),
         typedAnswerMode: (map['typedAnswerMode'] as bool?) ?? false,
+        soundEnabled: (map['soundEnabled'] as bool?) ?? true,
+        hapticsEnabled: (map['hapticsEnabled'] as bool?) ?? true,
       );
 }
