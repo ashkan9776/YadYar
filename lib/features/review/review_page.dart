@@ -422,10 +422,11 @@ class _CardFace extends StatelessWidget {
       ),
       child: Stack(
         children: [
-          Align(
-            alignment: Alignment.topLeft,
-            child: _SpeakerButton(text: text),
-          ),
+          if (TtsService.isSpeakable(text))
+            Align(
+              alignment: Alignment.topLeft,
+              child: _SpeakerButton(text: text),
+            ),
           Center(
             child: Column(
               mainAxisSize: MainAxisSize.min,

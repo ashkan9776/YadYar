@@ -130,16 +130,17 @@ class _PromptCard extends StatelessWidget {
       ),
       child: Stack(
         children: [
-          Align(
-            alignment: Alignment.topLeft,
-            child: IconButton(
-              icon: Icon(Icons.volume_up_rounded,
-                  size: 20, color: context.colors.textMuted),
-              tooltip: 'تلفظ',
-              visualDensity: VisualDensity.compact,
-              onPressed: () => TtsService.instance.speak(text),
+          if (TtsService.isSpeakable(text))
+            Align(
+              alignment: Alignment.topLeft,
+              child: IconButton(
+                icon: Icon(Icons.volume_up_rounded,
+                    size: 20, color: context.colors.textMuted),
+                tooltip: 'تلفظ',
+                visualDensity: VisualDensity.compact,
+                onPressed: () => TtsService.instance.speak(text),
+              ),
             ),
-          ),
           Center(
             child: MathText(
               text,
