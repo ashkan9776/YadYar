@@ -56,6 +56,15 @@ class ReviewPage extends ConsumerWidget {
           onPressed: () => context.pop(),
         ),
         actions: [
+          // دکمه‌ی مرور معکوس — جابجا کردن سوال و جواب.
+          if (!state.finished && state.cards.isNotEmpty)
+            IconButton(
+              icon: Icon(state.reverseMode
+                  ? Icons.swap_horiz_rounded
+                  : Icons.swap_horiz_outlined),
+              tooltip: state.reverseMode ? 'مرور معمولی' : 'مرور معکوس',
+              onPressed: controller.toggleReverse,
+            ),
           // دکمه‌ی تمرکز — فقط وقتی نشست شروع شده و هنوز فعال نیست.
           if (state.focusActive)
             IconButton(
@@ -210,6 +219,9 @@ class _ReviewBody extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final card = state.current!;
+    // در مرور معکوس، سوال و جواب جابجا می‌شوند.
+    final frontText = state.reverseMode ? card.back : card.front;
+    final backText = state.reverseMode ? card.front : card.back;
     return Padding(
       padding: const EdgeInsets.all(20),
       child: Column(
@@ -229,11 +241,11 @@ class _ReviewBody extends StatelessWidget {
                 showBack: state.showAnswer,
                 onTap: controller.flip,
                 front: _CardFace(
-                  text: card.front,
+                  text: frontText,
                   isBack: false,
                 ),
                 back: _CardFace(
-                  text: card.back,
+                  text: backText,
                   isBack: true,
                 ),
               ),
@@ -287,6 +299,8 @@ class _TypedReviewBodyState extends State<_TypedReviewBody> {
     final card = state.current!;
     final answered = state.showAnswer;
     final last = state.position == state.total;
+    // در مرور معکوس، سوال و جواب جابجا می‌شوند.
+    final frontText = state.reverseMode ? card.back : card.front;
     return Padding(
       padding: const EdgeInsets.all(20),
       child: Column(
@@ -305,7 +319,7 @@ class _TypedReviewBodyState extends State<_TypedReviewBody> {
             child: SingleChildScrollView(
               child: Column(
                 children: [
-                  _CardFace(text: card.front, isBack: false),
+                  _CardFace(text: frontText, isBack: false),
                   const SizedBox(height: 20),
                   if (!answered)
                     TextField(
@@ -318,7 +332,7 @@ class _TypedReviewBodyState extends State<_TypedReviewBody> {
                     )
                   else
                     _TypedResult(
-                      back: card.back,
+                      back: state.reverseMode ? card.front : card.back,
                       correct: state.typedCorrect,
                       typed: state.typedAnswer,
                     ),

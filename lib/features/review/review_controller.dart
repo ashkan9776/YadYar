@@ -38,6 +38,7 @@ class ReviewState {
     this.focusRemainingSeconds = 0,
     this.focusTotalSeconds = 0,
     this.focusEnded = false,
+    this.reverseMode = false,
   });
 
   final bool loading;
@@ -69,6 +70,9 @@ class ReviewState {
   /// آیا نشست به‌خاطر پایان زمان تمرکز تمام شده؟
   final bool focusEnded;
 
+  /// آیا مرور معکوس فعال است؟ (نمایش جواب به‌جای سوال)
+  final bool reverseMode;
+
   int get total => cards.length;
   int get position => index + 1;
 
@@ -93,6 +97,7 @@ class ReviewState {
     int? focusRemainingSeconds,
     int? focusTotalSeconds,
     bool? focusEnded,
+    bool? reverseMode,
   }) {
     return ReviewState(
       loading: loading ?? this.loading,
@@ -110,6 +115,7 @@ class ReviewState {
           focusRemainingSeconds ?? this.focusRemainingSeconds,
       focusTotalSeconds: focusTotalSeconds ?? this.focusTotalSeconds,
       focusEnded: focusEnded ?? this.focusEnded,
+      reverseMode: reverseMode ?? this.reverseMode,
     );
   }
 }
@@ -317,6 +323,11 @@ class ReviewController extends StateNotifier<ReviewState> {
     _focusTimer?.cancel();
     _focusTimer = null;
     state = state.copyWith(focusActive: false);
+  }
+
+  /// تغییر مرور معکوس — جابجا کردن سوال و جواب.
+  void toggleReverse() {
+    state = state.copyWith(reverseMode: !state.reverseMode);
   }
 
   @override
