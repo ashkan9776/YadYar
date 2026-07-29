@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../core/persian.dart';
 import '../../core/theme/app_colors.dart';
 import '../../data/models/flashcard.dart';
 import '../../providers/providers.dart';
@@ -125,6 +126,10 @@ class _CardEditorState extends ConsumerState<_CardEditor> {
             const SizedBox(height: 8),
             Text(r'فرمول ریاضی را بین دو $ بنویس، مثل $x^2$',
                 style: TextStyle(fontSize: 11, color: context.colors.textMuted)),
+            if (isEdit && !widget.existing!.isNew) ...[
+              const SizedBox(height: 16),
+              _CardStats(card: widget.existing!),
+            ],
             const SizedBox(height: 20),
             SizedBox(
               width: double.infinity,
@@ -137,6 +142,118 @@ class _CardEditorState extends ConsumerState<_CardEditor> {
           ),
         ),
       ),
+    );
+  }
+}
+
+/// نمایش آمار زمان‌بندی SM-2 یک کارت هنگام ویرایش.
+class _CardStats extends StatelessWidget {
+  const _CardStats({required this.card});
+  final FlashCard card;
+
+  @override
+  Widget build(BuildContext context) {
+    final c = context.colors;
+    return Container(
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: c.bg3,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: c.border),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text('آمار کارت',
+              style: TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
+                  color: c.textSecondary)),
+          const SizedBox(height: 10),
+          Row(
+            children: [
+              Expanded(
+                child: _StatItem(
+                  label: 'مرور بعدی',
+                  value: Fa.fullDate(card.nextReview),
+                  icon: Icons.calendar_today_rounded,
+                  color: c.accent,
+                ),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: _StatItem(
+                  label: 'فاصله',
+                  value: '${Fa.digits(card.interval)} روز',
+                  icon: Icons.timelapse_rounded,
+                  color: c.teal,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          Row(
+            children: [
+              Expanded(
+                child: _StatItem(
+                  label: 'ضریب سهولت',
+                  value: Fa.number(card.easeFactor),
+                  icon: Icons.trending_up_rounded,
+                  color: c.amber,
+                ),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: _StatItem(
+                  label: 'مرورهای پیاپی',
+                  value: Fa.digits(card.repetitions),
+                  icon: Icons.repeat_rounded,
+                  color: c.purple200,
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _StatItem extends StatelessWidget {
+  const _StatItem({
+    required this.label,
+    required this.value,
+    required this.icon,
+    required this.color,
+  });
+  final String label;
+  final String value;
+  final IconData icon;
+  final Color color;
+
+  @override
+  Widget build(BuildContext context) {
+    final c = context.colors;
+    return Row(
+      children: [
+        Icon(icon, size: 16, color: color),
+        const SizedBox(width: 6),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(label, style: TextStyle(fontSize: 10, color: c.textMuted)),
+              Text(value,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                      color: c.textPrimary)),
+            ],
+          ),
+        ),
+      ],
     );
   }
 }

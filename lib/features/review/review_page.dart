@@ -50,7 +50,16 @@ class ReviewPage extends ConsumerWidget {
       appBar: AppBar(
         title: state.focusActive
             ? _FocusTitle(seconds: state.focusRemainingSeconds)
-            : const Text('مرور'),
+            : state.cramMode
+                ? const Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(Icons.flash_on_rounded, size: 18, color: Colors.amber),
+                      SizedBox(width: 6),
+                      Text('مرور فوری'),
+                    ],
+                  )
+                : const Text('مرور'),
         leading: IconButton(
           icon: const Icon(Icons.close_rounded),
           onPressed: () => context.pop(),
@@ -236,17 +245,21 @@ class _ReviewBody extends StatelessWidget {
           ),
           Expanded(
             child: Center(
-              child: FlipCard(
-                key: ValueKey(card.id ?? state.index),
-                showBack: state.showAnswer,
-                onTap: controller.flip,
-                front: _CardFace(
-                  text: frontText,
-                  isBack: false,
-                ),
-                back: _CardFace(
-                  text: backText,
-                  isBack: true,
+              child: _SwipeableCard(
+                showAnswer: state.showAnswer,
+                onSwipe: controller.rate,
+                child: FlipCard(
+                  key: ValueKey(card.id ?? state.index),
+                  showBack: state.showAnswer,
+                  onTap: controller.flip,
+                  front: _CardFace(
+                    text: frontText,
+                    isBack: false,
+                  ),
+                  back: _CardFace(
+                    text: backText,
+                    isBack: true,
+                  ),
                 ),
               ),
             ),
@@ -415,6 +428,42 @@ class _TypedResult extends StatelessWidget {
   }
 }
 
+/// کارت با قابلیت سوایپ برای ارزیابی — فقط وقتی جواب نمایش داده شده فعال می‌شود.
+/// سوایپ به راست = آسون، بالا = خوب، چپ = سخت.
+class _SwipeableCard extends StatelessWidget {
+  const _SwipeableCard({
+    required this.showAnswer,
+    required this.onSwipe,
+    required this.child,
+  });
+  final bool showAnswer;
+  final void Function(Rating) onSwipe;
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    if (!showAnswer) return child;
+    return GestureDetector(
+      behavior: HitTestBehavior.translucent,
+      onHorizontalDragEnd: (details) {
+        final v = details.primaryVelocity ?? 0;
+        if (v < -400) {
+          onSwipe(Rating.hard); // سوایپ به چپ
+        } else if (v > 400) {
+          onSwipe(Rating.easy); // سوایپ به راست
+        }
+      },
+      onVerticalDragEnd: (details) {
+        final v = details.primaryVelocity ?? 0;
+        if (v < -400) {
+          onSwipe(Rating.good); // سوایپ به بالا
+        }
+      },
+      child: child,
+    );
+  }
+}
+
 class _CardFace extends StatelessWidget {
   const _CardFace({required this.text, required this.isBack});
   final String text;
@@ -499,31 +548,38 @@ class _RatingBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Row(
+    return Column(
       children: [
-        Expanded(
-          child: _RateButton(
-            label: Rating.hard.label,
-            color: context.colors.red,
-            onTap: () => onRate(Rating.hard),
-          ),
+        Row(
+          children: [
+            Expanded(
+              child: _RateButton(
+                label: Rating.hard.label,
+                color: context.colors.red,
+                onTap: () => onRate(Rating.hard),
+              ),
+            ),
+            const SizedBox(width: 10),
+            Expanded(
+              child: _RateButton(
+                label: Rating.good.label,
+                color: context.colors.teal,
+                onTap: () => onRate(Rating.good),
+              ),
+            ),
+            const SizedBox(width: 10),
+            Expanded(
+              child: _RateButton(
+                label: Rating.easy.label,
+                color: context.colors.accent,
+                onTap: () => onRate(Rating.easy),
+              ),
+            ),
+          ],
         ),
-        const SizedBox(width: 10),
-        Expanded(
-          child: _RateButton(
-            label: Rating.good.label,
-            color: context.colors.teal,
-            onTap: () => onRate(Rating.good),
-          ),
-        ),
-        const SizedBox(width: 10),
-        Expanded(
-          child: _RateButton(
-            label: Rating.easy.label,
-            color: context.colors.accent,
-            onTap: () => onRate(Rating.easy),
-          ),
-        ),
+        const SizedBox(height: 8),
+        Text('یا کارت را سوایپ کن: ← سخت · ↑ خوب · → آسون',
+            style: TextStyle(fontSize: 10, color: context.colors.textMuted)),
       ],
     );
   }

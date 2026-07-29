@@ -21,6 +21,16 @@ const int kAllDecks = -1;
 /// شناسه‌ی ساختگی برای «مرور نقاط ضعف» (کارت‌های سخت در همه‌ی دک‌ها).
 const int kWeakCards = -2;
 
+/// شناسه‌ی ساختگی برای «مرور فوری» (Cram) یک دک — همه‌ی کارت‌ها فارغ از سررسید.
+/// مقدار واقعی deckId در کدِ ۱۰۰۰+ ذخیره می‌شود.
+int cramId(int deckId) => -1000 - deckId;
+
+/// آیا شناسه‌ی داده‌شده یک نشست مرور فوری است؟
+bool isCramId(int id) => id <= -1000;
+
+/// استخراج deckId اصلی از شناسه‌ی مرور فوری.
+int cramDeckId(int id) => -1000 - id;
+
 /// وضعیت یک نشست مرور.
 class ReviewState {
   const ReviewState({
@@ -39,6 +49,7 @@ class ReviewState {
     this.focusTotalSeconds = 0,
     this.focusEnded = false,
     this.reverseMode = false,
+    this.cramMode = false,
   });
 
   final bool loading;
@@ -73,6 +84,9 @@ class ReviewState {
   /// آیا مرور معکوس فعال است؟ (نمایش جواب به‌جای سوال)
   final bool reverseMode;
 
+  /// آیا نشست مرور فوری (Cram) است؟ (بدون اثر روی زمان‌بندی SM-2)
+  final bool cramMode;
+
   int get total => cards.length;
   int get position => index + 1;
 
@@ -98,6 +112,7 @@ class ReviewState {
     int? focusTotalSeconds,
     bool? focusEnded,
     bool? reverseMode,
+    bool? cramMode,
   }) {
     return ReviewState(
       loading: loading ?? this.loading,
@@ -116,6 +131,7 @@ class ReviewState {
       focusTotalSeconds: focusTotalSeconds ?? this.focusTotalSeconds,
       focusEnded: focusEnded ?? this.focusEnded,
       reverseMode: reverseMode ?? this.reverseMode,
+      cramMode: cramMode ?? this.cramMode,
     );
   }
 }
@@ -156,11 +172,18 @@ class ReviewController extends StateNotifier<ReviewState> {
     final now = DateTime.now();
 
     List<FlashCard> queue;
+    bool cram = false;
     if (deckId == kWeakCards) {
       // نشست نقاط ضعف: کارت‌های سخت در همه‌ی دک‌ها، فارغ از سررسید.
       final cards = await cardRepo.getAll();
       final logs = await _ref.read(reviewRepositoryProvider).getAll();
       queue = WeakCards.select(cards, logs);
+    } else if (isCramId(deckId)) {
+      // مرور فوری: همه‌ی کارت‌های دک، فارغ از سررسید، بدون اثر روی SM-2.
+      cram = true;
+      final realDeckId = cramDeckId(deckId);
+      queue = await cardRepo.getByDeck(realDeckId);
+      queue.shuffle();
     } else {
       final all = deckId == kAllDecks
           ? await cardRepo.getAll()
@@ -170,7 +193,8 @@ class ReviewController extends StateNotifier<ReviewState> {
     }
 
     _cardShownAt = DateTime.now();
-    state = state.copyWith(loading: false, cards: queue, index: 0);
+    state = state.copyWith(
+        loading: false, cards: queue, index: 0, cramMode: cram);
   }
 
   void flip() {
@@ -213,23 +237,28 @@ class ReviewController extends StateNotifier<ReviewState> {
     NotificationService.instance.cancelStreakReminder();
 
     final now = DateTime.now();
-    final updated = Sm2.apply(card, rating.quality, now: now);
-    await _ref.read(cardRepositoryProvider).update(updated);
-    final logId = await _ref.read(reviewRepositoryProvider).add(ReviewLog(
-          cardId: card.id!,
-          deckId: card.deckId,
-          quality: rating.quality,
-          reviewedAt: now,
-          durationMs: now.difference(_cardShownAt).inMilliseconds,
-        ));
 
-    // ذخیره‌ی وضعیت پیش از ارزیابی برای امکان بازگشت.
-    _undoStack.add(_UndoEntry(
-      previousCard: card,
-      reviewLogId: logId,
-      atIndex: state.index,
-      rating: rating,
-    ));
+    if (state.cramMode) {
+      // مرور فوری: بدون نوشتن لاگ و بدون تغییر زمان‌بندی SM-2.
+    } else {
+      final updated = Sm2.apply(card, rating.quality, now: now);
+      await _ref.read(cardRepositoryProvider).update(updated);
+      final logId = await _ref.read(reviewRepositoryProvider).add(ReviewLog(
+            cardId: card.id!,
+            deckId: card.deckId,
+            quality: rating.quality,
+            reviewedAt: now,
+            durationMs: now.difference(_cardShownAt).inMilliseconds,
+          ));
+
+      // ذخیره‌ی وضعیت پیش از ارزیابی برای امکان بازگشت.
+      _undoStack.add(_UndoEntry(
+        previousCard: card,
+        reviewLogId: logId,
+        atIndex: state.index,
+        rating: rating,
+      ));
+    }
 
     var hard = state.hard, good = state.good, easy = state.easy;
     switch (rating) {
@@ -259,8 +288,10 @@ class ReviewController extends StateNotifier<ReviewState> {
     if (_undoStack.isEmpty) return;
     final entry = _undoStack.removeLast();
 
-    await _ref.read(cardRepositoryProvider).update(entry.previousCard);
-    await _ref.read(reviewRepositoryProvider).delete(entry.reviewLogId);
+    if (!state.cramMode) {
+      await _ref.read(cardRepositoryProvider).update(entry.previousCard);
+      await _ref.read(reviewRepositoryProvider).delete(entry.reviewLogId);
+    }
 
     var hard = state.hard, good = state.good, easy = state.easy;
     switch (entry.rating) {

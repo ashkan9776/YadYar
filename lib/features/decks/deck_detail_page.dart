@@ -12,6 +12,7 @@ import '../../core/widgets/math_text.dart';
 import '../../data/models/deck.dart';
 import '../../data/models/flashcard.dart';
 import '../../providers/providers.dart';
+import '../review/review_controller.dart';
 import 'card_editor_sheet.dart';
 
 /// جزئیات یک دک: لیست کارت‌ها، مرور، افزودن/ویرایش/حذف کارت.
@@ -83,6 +84,19 @@ class DeckDetailPage extends ConsumerWidget {
                               color: context.colors.textSecondary, fontSize: 13),
                         ),
                       ),
+                      if (cards.isNotEmpty)
+                        OutlinedButton(
+                          style: OutlinedButton.styleFrom(
+                            foregroundColor: color,
+                            side: BorderSide(color: color.withValues(alpha: 0.5)),
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 14, vertical: 12),
+                          ),
+                          onPressed: () =>
+                              context.push('/review/${cramId(deckId)}'),
+                          child: const Text('مرور فوری', style: TextStyle(fontSize: 13)),
+                        ),
+                      const SizedBox(width: 8),
                       FilledButton(
                         style: FilledButton.styleFrom(
                           backgroundColor: due > 0 ? color : context.colors.bg3,
