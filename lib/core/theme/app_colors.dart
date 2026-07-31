@@ -23,6 +23,11 @@ class AppPalette extends ThemeExtension<AppPalette> {
     required this.amber600,
     required this.red,
     required this.red600,
+    // توکن‌های نئون (افزوده‌ی بازطراحی بصری)
+    required this.neonBlue,
+    required this.neonGreen,
+    required this.surfaceGlow,
+    required this.cardShadow,
   });
 
   // پس‌زمینه‌ها
@@ -53,6 +58,12 @@ class AppPalette extends ThemeExtension<AppPalette> {
   final Color red;
   final Color red600;
 
+  // توکن‌های نئون (افزوده‌ی بازطراحی بصری)
+  final Color neonBlue;
+  final Color neonGreen;
+  final Color surfaceGlow;
+  final Color cardShadow;
+
   /// تم تاریک — پالت اصلی برگرفته از PRD رسمی محصول.
   static const dark = AppPalette(
     bg: Color(0xFF0D0C14),
@@ -73,6 +84,10 @@ class AppPalette extends ThemeExtension<AppPalette> {
     amber600: Color(0xFF854F0B),
     red: Color(0xFFE24B4A),
     red600: Color(0xFFA32D2D),
+    neonBlue: Color(0xFF4A9BE2),
+    neonGreen: Color(0xFF3DD68C),
+    surfaceGlow: Color(0xCC13111F), // bg2 با آلفای ۸۰٪ برای شیشه‌مورفیسم
+    cardShadow: Color(0x4D7F77DD), // accent با آلفای ۳۰٪
   );
 
   /// تم روشن — همان هویت بنفش با پس‌زمینه‌ی روشن و متن تیره.
@@ -95,6 +110,10 @@ class AppPalette extends ThemeExtension<AppPalette> {
     amber600: Color(0xFF854F0B),
     red: Color(0xFFD23A39),
     red600: Color(0xFFA32D2D),
+    neonBlue: Color(0xFF2D7DD2),
+    neonGreen: Color(0xFF1FB868),
+    surfaceGlow: Color(0xCCFFFFFF), // bg2 با آلفای ۸۰٪
+    cardShadow: Color(0x1A6A61D4), // accent روشن با آلفای ۱۰٪
   );
 
   @override
@@ -117,6 +136,10 @@ class AppPalette extends ThemeExtension<AppPalette> {
     Color? amber600,
     Color? red,
     Color? red600,
+    Color? neonBlue,
+    Color? neonGreen,
+    Color? surfaceGlow,
+    Color? cardShadow,
   }) {
     return AppPalette(
       bg: bg ?? this.bg,
@@ -137,6 +160,10 @@ class AppPalette extends ThemeExtension<AppPalette> {
       amber600: amber600 ?? this.amber600,
       red: red ?? this.red,
       red600: red600 ?? this.red600,
+      neonBlue: neonBlue ?? this.neonBlue,
+      neonGreen: neonGreen ?? this.neonGreen,
+      surfaceGlow: surfaceGlow ?? this.surfaceGlow,
+      cardShadow: cardShadow ?? this.cardShadow,
     );
   }
 
@@ -162,6 +189,10 @@ class AppPalette extends ThemeExtension<AppPalette> {
       amber600: Color.lerp(amber600, other.amber600, t)!,
       red: Color.lerp(red, other.red, t)!,
       red600: Color.lerp(red600, other.red600, t)!,
+      neonBlue: Color.lerp(neonBlue, other.neonBlue, t)!,
+      neonGreen: Color.lerp(neonGreen, other.neonGreen, t)!,
+      surfaceGlow: Color.lerp(surfaceGlow, other.surfaceGlow, t)!,
+      cardShadow: Color.lerp(cardShadow, other.cardShadow, t)!,
     );
   }
 }

@@ -60,7 +60,7 @@ class AppTheme {
         ),
       ),
       bottomNavigationBarTheme: BottomNavigationBarThemeData(
-        backgroundColor: c.bg2,
+        backgroundColor: c.bg2.withValues(alpha: 0.95),
         selectedItemColor: c.accent,
         unselectedItemColor: c.textMuted,
         type: BottomNavigationBarType.fixed,
@@ -98,12 +98,40 @@ class AppTheme {
           ),
         ),
       ),
+      outlinedButtonTheme: OutlinedButtonThemeData(
+        style: OutlinedButton.styleFrom(
+          foregroundColor: c.accent,
+          side: BorderSide(color: c.border2),
+          padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 20),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(14),
+          ),
+          textStyle: const TextStyle(
+            fontFamily: fontFamily,
+            fontWeight: FontWeight.w600,
+            fontSize: 15,
+          ),
+        ),
+      ),
       snackBarTheme: SnackBarThemeData(
         backgroundColor: c.bg3,
         contentTextStyle: TextStyle(fontFamily: fontFamily, color: c.textPrimary),
         behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       ),
-      dialogTheme: DialogThemeData(backgroundColor: c.bg2),
+      dialogTheme: DialogThemeData(
+        backgroundColor: c.bg2,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(20),
+        ),
+      ),
+      bottomSheetTheme: BottomSheetThemeData(
+        backgroundColor: c.bg2,
+        surfaceTintColor: Colors.transparent,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+        ),
+      ),
     );
   }
 

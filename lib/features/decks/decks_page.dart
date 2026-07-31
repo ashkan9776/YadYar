@@ -80,6 +80,22 @@ class _DecksPageState extends ConsumerState<DecksPage> {
       appBar: AppBar(
         title: const Text('دک‌های من'),
         actions: [
+          if (decksAsync.value != null && decksAsync.value!.isNotEmpty)
+            Padding(
+              padding: const EdgeInsets.only(left: 4),
+              child: Badge(
+                label: Text(Fa.digits(
+                    decksAsync.value!.fold<int>(0, (s, d) => s + (cardCounts[d.id] ?? 0)))),
+                backgroundColor: context.colors.accent.withValues(alpha: 0.15),
+                textColor: context.colors.accent,
+                child: IconButton(
+                  icon: const Icon(Icons.collections_rounded, size: 20),
+                  tooltip: 'مجموع کارت‌ها',
+                  onPressed: () {},
+                ),
+              ),
+            ),
+          const SizedBox(width: 4),
           IconButton(
             icon: _importing
                 ? const SizedBox(
@@ -169,6 +185,13 @@ class _DeckCard extends StatelessWidget {
                   decoration: BoxDecoration(
                     color: color,
                     borderRadius: BorderRadius.circular(100),
+                    boxShadow: [
+                      BoxShadow(
+                        color: color.withValues(alpha: 0.35),
+                        blurRadius: 8,
+                        spreadRadius: 1,
+                      ),
+                    ],
                   ),
                   child: Text(Fa.digits(due),
                       style: const TextStyle(
@@ -207,11 +230,19 @@ class _NewDeckTile extends StatelessWidget {
           ),
         ),
         child: Center(
-          child: Text('+ دک جدید',
-              style: TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w600,
-                  color: context.colors.textSecondary)),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(Icons.add_circle_outline_rounded,
+                  size: 18, color: context.colors.textSecondary),
+              const SizedBox(width: 6),
+              Text('دک جدید',
+                  style: TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                      color: context.colors.textSecondary)),
+            ],
+          ),
         ),
       ),
     );

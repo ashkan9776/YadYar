@@ -24,7 +24,7 @@ class YadyarApp extends ConsumerWidget {
         AppThemeMode.light => ThemeMode.light,
         AppThemeMode.dark => ThemeMode.dark,
       },
-      routerConfig: appRouter,
+      routerConfig: ref.watch(appRouterProvider),
       locale: const Locale('fa'),
       localizationsDelegates: const [
         GlobalMaterialLocalizations.delegate,

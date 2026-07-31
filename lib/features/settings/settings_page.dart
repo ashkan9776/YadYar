@@ -250,6 +250,39 @@ class SettingsPage extends ConsumerWidget {
                 ),
               ),
             ),
+            const SizedBox(height: 32),
+            // بخش درباره و نسخه.
+            Center(
+              child: Column(
+                children: [
+                  Container(
+                    width: 56,
+                    height: 56,
+                    decoration: BoxDecoration(
+                      color: context.colors.accent.withValues(alpha: 0.12),
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                    child: Icon(Icons.auto_stories_rounded,
+                        size: 28, color: context.colors.accent),
+                  ),
+                  const SizedBox(height: 12),
+                  Text('یادیار',
+                      style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w700,
+                          color: context.colors.textPrimary)),
+                  const SizedBox(height: 4),
+                  Text('نسخه ${Fa.digits('1.0.0')}',
+                      style: TextStyle(
+                          fontSize: 12, color: context.colors.textMuted)),
+                  const SizedBox(height: 8),
+                  Text('تکرار فاصله‌دار هوشمند برای یادگیری',
+                      style: TextStyle(
+                          fontSize: 11, color: context.colors.textMuted)),
+                ],
+              ),
+            ),
+            const SizedBox(height: 20),
           ],
         ),
       ),

@@ -58,6 +58,7 @@ class _StatsPageState extends ConsumerState<StatsPage> {
                     value: Fa.number(stats.monthCardsReviewed),
                     label: 'کارت مرور شده',
                     color: context.colors.accent,
+                    icon: Icons.style_rounded,
                   ),
                 ),
                 const SizedBox(width: 12),
@@ -66,6 +67,7 @@ class _StatsPageState extends ConsumerState<StatsPage> {
                     value: _formatTime(stats.monthStudyMinutes),
                     label: 'زمان مطالعه',
                     color: context.colors.teal,
+                    icon: Icons.schedule_rounded,
                   ),
                 ),
               ],
@@ -78,6 +80,7 @@ class _StatsPageState extends ConsumerState<StatsPage> {
                     value: Fa.digits(stats.streakDays),
                     label: 'روز استریک',
                     color: context.colors.amber,
+                    icon: Icons.local_fire_department_rounded,
                   ),
                 ),
                 const SizedBox(width: 12),
@@ -86,6 +89,7 @@ class _StatsPageState extends ConsumerState<StatsPage> {
                     value: Fa.number(stats.totalCards),
                     label: 'کل کارت‌ها',
                     color: context.colors.purple200,
+                    icon: Icons.collections_rounded,
                   ),
                 ),
               ],
@@ -177,16 +181,21 @@ class _StatsPageState extends ConsumerState<StatsPage> {
 }
 
 class _BigStat extends StatelessWidget {
-  const _BigStat(
-      {required this.value, required this.label, required this.color});
+  const _BigStat({
+    required this.value,
+    required this.label,
+    required this.color,
+    required this.icon,
+  });
   final String value;
   final String label;
   final Color color;
+  final IconData icon;
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(vertical: 22),
+      padding: const EdgeInsets.symmetric(vertical: 18),
       decoration: BoxDecoration(
         color: context.colors.bg2,
         borderRadius: BorderRadius.circular(14),
@@ -194,9 +203,19 @@ class _BigStat extends StatelessWidget {
       ),
       child: Column(
         children: [
+          Container(
+            width: 36,
+            height: 36,
+            decoration: BoxDecoration(
+              color: color.withValues(alpha: 0.15),
+              shape: BoxShape.circle,
+            ),
+            child: Icon(icon, color: color, size: 18),
+          ),
+          const SizedBox(height: 10),
           Text(value,
               style: TextStyle(
-                  fontSize: 24, fontWeight: FontWeight.w700, color: color)),
+                  fontSize: 22, fontWeight: FontWeight.w700, color: color)),
           const SizedBox(height: 4),
           Text(label,
               style:
@@ -287,13 +306,26 @@ class _ForecastChart extends StatelessWidget {
               children: [
                 for (var i = 0; i < counts.length; i++)
                   Expanded(
-                    child: _ForecastBar(
-                      count: counts[i],
-                      maxVal: maxVal,
-                      label: i == 0
-                          ? 'امروز'
-                          : Fa.weekdayShort(today.add(Duration(days: i))),
-                      highlight: i == 0,
+                    child: TweenAnimationBuilder<double>(
+                      tween: Tween(begin: 0, end: 1),
+                      duration: Duration(milliseconds: 400 + i * 80),
+                      curve: Curves.easeOut,
+                      builder: (context, val, child) => Opacity(
+                        opacity: val.clamp(0.0, 1.0),
+                        child: Transform.translate(
+                          offset: Offset(0, 12 * (1 - val)),
+                          child: child,
+                        ),
+                      ),
+                      child: _ForecastBar(
+                        count: counts[i],
+                        maxVal: maxVal,
+                        label: i == 0
+                            ? 'امروز'
+                            : Fa.weekdayShort(today.add(Duration(days: i))),
+                        highlight: i == 0,
+                        index: i,
+                      ),
                     ),
                   ),
               ],
@@ -308,11 +340,13 @@ class _ForecastBar extends StatelessWidget {
     required this.maxVal,
     required this.label,
     required this.highlight,
+    required this.index,
   });
   final int count;
   final int maxVal;
   final String label;
   final bool highlight;
+  final int index;
 
   @override
   Widget build(BuildContext context) {
@@ -327,7 +361,7 @@ class _ForecastBar extends StatelessWidget {
         const SizedBox(height: 4),
         TweenAnimationBuilder<double>(
           tween: Tween(begin: 0, end: frac),
-          duration: const Duration(milliseconds: 600),
+          duration: const Duration(milliseconds: 500),
           curve: Curves.easeOutCubic,
           builder: (context, value, _) => Container(
             height: 8 + value * 80,
@@ -335,6 +369,15 @@ class _ForecastBar extends StatelessWidget {
             decoration: BoxDecoration(
               color: count == 0 ? c.bg3 : color.withValues(alpha: 0.85),
               borderRadius: BorderRadius.circular(5),
+              boxShadow: count == 0
+                  ? null
+                  : [
+                      BoxShadow(
+                        color: color.withValues(alpha: 0.3),
+                        blurRadius: 6,
+                        spreadRadius: 0,
+                      ),
+                    ],
             ),
           ),
         ),
@@ -346,15 +389,22 @@ class _ForecastBar extends StatelessWidget {
 }
 
 /// نقشه‌ی حرارتی فعالیت مطالعه (مثل گیت‌هاب) — ۱۵ هفته‌ی اخیر.
-class _ActivityHeatmap extends StatelessWidget {
+class _ActivityHeatmap extends StatefulWidget {
   const _ActivityHeatmap({required this.counts});
   final Map<DateTime, int> counts;
 
+  @override
+  State<_ActivityHeatmap> createState() => _ActivityHeatmapState();
+}
+
+class _ActivityHeatmapState extends State<_ActivityHeatmap> {
   static const _weeks = 15;
+  DateTime? _selectedDay;
 
   @override
   Widget build(BuildContext context) {
     final c = context.colors;
+    final counts = widget.counts;
     final today = DateTime(
         DateTime.now().year, DateTime.now().month, DateTime.now().day);
     // شروع از شنبه‌ی ۱۵ هفته قبل.
@@ -372,6 +422,31 @@ class _ActivityHeatmap extends StatelessWidget {
       return c.accent.withValues(alpha: 0.3 + 0.7 * t);
     }
 
+    // نمایش tooltip وقتی روزی انتخاب شده.
+    Widget? tooltip;
+    if (_selectedDay != null && !_selectedDay!.isAfter(today)) {
+      final v = counts[_selectedDay] ?? 0;
+      tooltip = Padding(
+        padding: const EdgeInsets.only(bottom: 10),
+        child: Align(
+          alignment: Alignment.centerRight,
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+            decoration: BoxDecoration(
+              color: c.bg3,
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Text(
+              v == 0
+                  ? Fa.fullDate(_selectedDay!)
+                  : '${Fa.digits(v)} مرور — ${Fa.fullDate(_selectedDay!)}',
+              style: TextStyle(fontSize: 11, color: c.textSecondary),
+            ),
+          ),
+        ),
+      );
+    }
+
     return Container(
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
@@ -382,6 +457,7 @@ class _ActivityHeatmap extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          ?tooltip,
           // شبکه‌ی هفته‌ها — قدیمی‌ترین چپ، جدیدترین راست (جهت LTR).
           Directionality(
             textDirection: TextDirection.ltr,
@@ -392,14 +468,28 @@ class _ActivityHeatmap extends StatelessWidget {
                   Column(
                     children: [
                       for (var d = 0; d < 7; d++)
-                        Container(
-                          width: 14,
-                          height: 14,
-                          margin: const EdgeInsets.all(1.5),
-                          decoration: BoxDecoration(
-                            color: cellColor(
-                                start.add(Duration(days: w * 7 + d))),
-                            borderRadius: BorderRadius.circular(3),
+                        GestureDetector(
+                          onTap: () {
+                            final day = start.add(Duration(days: w * 7 + d));
+                            if (day.isAfter(today)) return;
+                            setState(() {
+                              _selectedDay =
+                                  _selectedDay == day ? null : day;
+                            });
+                          },
+                          child: Container(
+                            width: 14,
+                            height: 14,
+                            margin: const EdgeInsets.all(1.5),
+                            decoration: BoxDecoration(
+                              color: cellColor(
+                                  start.add(Duration(days: w * 7 + d))),
+                              borderRadius: BorderRadius.circular(3),
+                              border: _selectedDay ==
+                                      start.add(Duration(days: w * 7 + d))
+                                  ? Border.all(color: c.textPrimary, width: 1.5)
+                                  : null,
+                            ),
                           ),
                         ),
                     ],

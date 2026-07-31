@@ -12,6 +12,7 @@ class AppSettings {
     this.typedAnswerMode = false,
     this.soundEnabled = true,
     this.hapticsEnabled = true,
+    this.onboardingDone = false,
   });
 
   /// آیا یادآوری روزانه فعال است؟
@@ -36,6 +37,9 @@ class AppSettings {
   /// آیا لرزش (هپتیک) فعال است؟
   final bool hapticsEnabled;
 
+  /// آیا کاربر آنبوردینگ را دیده است؟
+  final bool onboardingDone;
+
   static const defaults = AppSettings();
 
   AppSettings copyWith({
@@ -47,6 +51,7 @@ class AppSettings {
     bool? typedAnswerMode,
     bool? soundEnabled,
     bool? hapticsEnabled,
+    bool? onboardingDone,
   }) {
     return AppSettings(
       reminderEnabled: reminderEnabled ?? this.reminderEnabled,
@@ -57,6 +62,7 @@ class AppSettings {
       typedAnswerMode: typedAnswerMode ?? this.typedAnswerMode,
       soundEnabled: soundEnabled ?? this.soundEnabled,
       hapticsEnabled: hapticsEnabled ?? this.hapticsEnabled,
+      onboardingDone: onboardingDone ?? this.onboardingDone,
     );
   }
 
@@ -69,6 +75,7 @@ class AppSettings {
         'typedAnswerMode': typedAnswerMode,
         'soundEnabled': soundEnabled,
         'hapticsEnabled': hapticsEnabled,
+        'onboardingDone': onboardingDone,
       };
 
   factory AppSettings.fromMap(Map<String, Object?> map) => AppSettings(
@@ -83,5 +90,6 @@ class AppSettings {
         typedAnswerMode: (map['typedAnswerMode'] as bool?) ?? false,
         soundEnabled: (map['soundEnabled'] as bool?) ?? true,
         hapticsEnabled: (map['hapticsEnabled'] as bool?) ?? true,
+        onboardingDone: (map['onboardingDone'] as bool?) ?? false,
       );
 }

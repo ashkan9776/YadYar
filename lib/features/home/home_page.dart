@@ -66,6 +66,7 @@ class _HomePageState extends ConsumerState<HomePage> {
                     value: Fa.digits(stats.streakDays),
                     label: 'روز استریک',
                     color: context.colors.accent,
+                    icon: Icons.local_fire_department_rounded,
                   ),
                 ),
                 const SizedBox(width: 12),
@@ -74,6 +75,7 @@ class _HomePageState extends ConsumerState<HomePage> {
                     value: '${Fa.digits((stats.weeklyAccuracy * 100).round())}٪',
                     label: 'دقت این هفته',
                     color: context.colors.teal,
+                    icon: Icons.gps_fixed_rounded,
                   ),
                 ),
               ],
@@ -100,6 +102,7 @@ class _Header extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final c = context.colors;
     final sub = dueCount > 0
         ? 'امروز ${Fa.digits(dueCount)} کارت منتظرته'
         : 'همه‌ی کارت‌های امروزت رو مرور کردی 🎉';
@@ -109,14 +112,15 @@ class _Header extends StatelessWidget {
         gradient: LinearGradient(
           begin: Alignment.topRight,
           end: Alignment.bottomLeft,
-          colors: [context.colors.purple600, context.colors.accent],
+          colors: [c.purple600, c.accent],
         ),
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-            color: context.colors.accent.withValues(alpha: 0.3),
-            blurRadius: 24,
-            offset: const Offset(0, 8),
+            color: c.accent.withValues(alpha: 0.35),
+            blurRadius: 30,
+            spreadRadius: 2,
+            offset: const Offset(0, 10),
           ),
         ],
       ),
@@ -344,6 +348,7 @@ class _StartReviewButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final enabled = dueCount > 0;
+    final c = context.colors;
     return SizedBox(
       width: double.infinity,
       child: ElevatedButton(
@@ -351,9 +356,10 @@ class _StartReviewButton extends StatelessWidget {
             ? () => context.push('/review/$kAllDecks')
             : null,
         style: ElevatedButton.styleFrom(
-          backgroundColor: context.colors.accent,
-          disabledBackgroundColor: context.colors.bg3,
+          backgroundColor: c.accent,
+          disabledBackgroundColor: c.bg3,
           padding: const EdgeInsets.symmetric(vertical: 18),
+          elevation: enabled ? 0 : 0,
         ),
         child: Text(
           enabled
@@ -362,7 +368,7 @@ class _StartReviewButton extends StatelessWidget {
           style: TextStyle(
             fontSize: 14,
             fontWeight: FontWeight.w600,
-            color: enabled ? Colors.white : context.colors.textMuted,
+            color: enabled ? Colors.white : c.textMuted,
           ),
         ),
       ),
@@ -408,30 +414,37 @@ class _WeakPointsButton extends StatelessWidget {
 }
 
 class _StatTile extends StatelessWidget {
-  const _StatTile(
-      {required this.value, required this.label, required this.color});
+  const _StatTile({
+    required this.value,
+    required this.label,
+    required this.color,
+    required this.icon,
+  });
   final String value;
   final String label;
   final Color color;
+  final IconData icon;
 
   @override
   Widget build(BuildContext context) {
+    final c = context.colors;
     return Container(
-      padding: const EdgeInsets.symmetric(vertical: 18),
+      padding: const EdgeInsets.symmetric(vertical: 16),
       decoration: BoxDecoration(
-        color: context.colors.bg3,
+        color: c.bg3,
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: context.colors.border),
+        border: Border.all(color: c.border),
       ),
       child: Column(
         children: [
+          Icon(icon, size: 20, color: color.withValues(alpha: 0.8)),
+          const SizedBox(height: 8),
           Text(value,
               style: TextStyle(
                   fontSize: 26, fontWeight: FontWeight.w700, color: color)),
           const SizedBox(height: 4),
           Text(label,
-              style:
-                  TextStyle(fontSize: 11, color: context.colors.textMuted)),
+              style: TextStyle(fontSize: 11, color: c.textMuted)),
         ],
       ),
     );

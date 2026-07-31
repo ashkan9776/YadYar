@@ -7,7 +7,9 @@ import '../../core/theme/app_colors.dart';
 import '../../core/tts.dart';
 import '../../core/widgets/confetti_burst.dart';
 import '../../core/widgets/math_text.dart';
+import '../../data/models/flashcard.dart';
 import '../../data/models/rating.dart';
+import '../../domain/sm2.dart';
 import '../../providers/providers.dart';
 import 'review_controller.dart';
 import 'widgets/flip_card.dart';
@@ -96,13 +98,30 @@ class ReviewPage extends ConsumerWidget {
         ],
         bottom: state.cards.isNotEmpty && !state.finished
             ? PreferredSize(
-                preferredSize: const Size.fromHeight(4),
-                child: LinearProgressIndicator(
-                  value: state.progress,
-                  minHeight: 4,
-                  backgroundColor: context.colors.bg3,
-                  valueColor:
-                      AlwaysStoppedAnimation(context.colors.accent),
+                preferredSize: const Size.fromHeight(6),
+                child: Container(
+                  height: 6,
+                  decoration: BoxDecoration(
+                    color: context.colors.bg3,
+                    borderRadius: BorderRadius.circular(3),
+                  ),
+                  child: FractionallySizedBox(
+                    widthFactor: state.progress.clamp(0.0, 1.0),
+                    child: Container(
+                      decoration: BoxDecoration(
+                        color: context.colors.accent,
+                        borderRadius: BorderRadius.circular(3),
+                        boxShadow: [
+                          BoxShadow(
+                            color:
+                                context.colors.accent.withValues(alpha: 0.5),
+                            blurRadius: 8,
+                            spreadRadius: 0,
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
                 ),
               )
             : null,
@@ -269,7 +288,7 @@ class _ReviewBody extends StatelessWidget {
             Text('برای دیدن جواب روی کارت بزن',
                 style: TextStyle(fontSize: 12, color: context.colors.textMuted))
           else
-            _RatingBar(onRate: controller.rate),
+            _RatingBar(onRate: controller.rate, card: card),
           const SizedBox(height: 8),
         ],
       ),
@@ -430,7 +449,7 @@ class _TypedResult extends StatelessWidget {
 
 /// کارت با قابلیت سوایپ برای ارزیابی — فقط وقتی جواب نمایش داده شده فعال می‌شود.
 /// سوایپ به راست = آسون، بالا = خوب، چپ = سخت.
-class _SwipeableCard extends StatelessWidget {
+class _SwipeableCard extends StatefulWidget {
   const _SwipeableCard({
     required this.showAnswer,
     required this.onSwipe,
@@ -441,25 +460,73 @@ class _SwipeableCard extends StatelessWidget {
   final Widget child;
 
   @override
+  State<_SwipeableCard> createState() => _SwipeableCardState();
+}
+
+class _SwipeableCardState extends State<_SwipeableCard> {
+  double _dx = 0;
+  double _dy = 0;
+
+  Color? _swipeColor(BuildContext context) {
+    if (_dx.abs() < 30 && _dy.abs() < 30) return null;
+    if (_dx < -30) return context.colors.red;
+    if (_dx > 30) return context.colors.accent;
+    if (_dy < -30) return context.colors.teal;
+    return null;
+  }
+
+  @override
   Widget build(BuildContext context) {
-    if (!showAnswer) return child;
+    if (!widget.showAnswer) return widget.child;
+    final bgColor = _swipeColor(context);
     return GestureDetector(
       behavior: HitTestBehavior.translucent,
+      onHorizontalDragUpdate: (d) => setState(() {
+        _dx += d.delta.dx;
+        _dy = 0;
+      }),
       onHorizontalDragEnd: (details) {
         final v = details.primaryVelocity ?? 0;
-        if (v < -400) {
-          onSwipe(Rating.hard); // سوایپ به چپ
-        } else if (v > 400) {
-          onSwipe(Rating.easy); // سوایپ به راست
+        if (v < -400 || _dx < -80) {
+          widget.onSwipe(Rating.hard);
+        } else if (v > 400 || _dx > 80) {
+          widget.onSwipe(Rating.easy);
         }
+        setState(() => _dx = 0);
       },
+      onVerticalDragUpdate: (d) => setState(() {
+        _dy += d.delta.dy;
+        _dx = 0;
+      }),
       onVerticalDragEnd: (details) {
         final v = details.primaryVelocity ?? 0;
-        if (v < -400) {
-          onSwipe(Rating.good); // سوایپ به بالا
+        if (v < -400 || _dy < -80) {
+          widget.onSwipe(Rating.good);
         }
+        setState(() => _dy = 0);
       },
-      child: child,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        curve: Curves.easeOutCubic,
+        transform: Matrix4.translationValues(
+          _dx.clamp(-60, 60),
+          _dy.clamp(-40, 40),
+          0,
+        ),
+        decoration: bgColor != null
+            ? BoxDecoration(
+                borderRadius: BorderRadius.circular(20),
+                boxShadow: [
+                  BoxShadow(
+                    color: bgColor.withValues(alpha: 0.25),
+                    blurRadius: 24,
+                    spreadRadius: 2,
+                  ),
+                ],
+              )
+            : null,
+        child: widget.child,
+      ),
     );
   }
 }
@@ -471,17 +538,26 @@ class _CardFace extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final c = context.colors;
+    final glowColor = isBack ? c.teal : c.accent;
     return Container(
       width: double.infinity,
       constraints: const BoxConstraints(minHeight: 220),
       padding: const EdgeInsets.all(28),
       decoration: BoxDecoration(
-        color: context.colors.bg2,
+        color: c.bg2,
         borderRadius: BorderRadius.circular(20),
         border: Border.all(
-          color: isBack ? context.colors.teal.withValues(alpha: 0.4) : context.colors.border2,
+          color: isBack ? c.teal.withValues(alpha: 0.4) : c.border2,
           width: 1.5,
         ),
+        boxShadow: [
+          BoxShadow(
+            color: glowColor.withValues(alpha: 0.15),
+            blurRadius: 20,
+            spreadRadius: 1,
+          ),
+        ],
       ),
       child: Stack(
         children: [
@@ -499,8 +575,7 @@ class _CardFace extends StatelessWidget {
                   style: TextStyle(
                     fontSize: 11,
                     letterSpacing: 1,
-                    color:
-                        isBack ? context.colors.teal : context.colors.textMuted,
+                    color: isBack ? c.teal : c.textMuted,
                   ),
                 ),
                 const SizedBox(height: 16),
@@ -511,9 +586,7 @@ class _CardFace extends StatelessWidget {
                     fontSize: 22,
                     height: 1.6,
                     fontWeight: FontWeight.w600,
-                    color: isBack
-                        ? context.colors.teal
-                        : context.colors.textPrimary,
+                    color: isBack ? c.teal : c.textPrimary,
                   ),
                 ),
               ],
@@ -543,8 +616,9 @@ class _SpeakerButton extends StatelessWidget {
 }
 
 class _RatingBar extends StatelessWidget {
-  const _RatingBar({required this.onRate});
+  const _RatingBar({required this.onRate, required this.card});
   final void Function(Rating) onRate;
+  final FlashCard card;
 
   @override
   Widget build(BuildContext context) {
@@ -556,6 +630,7 @@ class _RatingBar extends StatelessWidget {
               child: _RateButton(
                 label: Rating.hard.label,
                 color: context.colors.red,
+                hint: _intervalHint(card, Rating.hard),
                 onTap: () => onRate(Rating.hard),
               ),
             ),
@@ -564,6 +639,7 @@ class _RatingBar extends StatelessWidget {
               child: _RateButton(
                 label: Rating.good.label,
                 color: context.colors.teal,
+                hint: _intervalHint(card, Rating.good),
                 onTap: () => onRate(Rating.good),
               ),
             ),
@@ -572,6 +648,7 @@ class _RatingBar extends StatelessWidget {
               child: _RateButton(
                 label: Rating.easy.label,
                 color: context.colors.accent,
+                hint: _intervalHint(card, Rating.easy),
                 onTap: () => onRate(Rating.easy),
               ),
             ),
@@ -583,13 +660,30 @@ class _RatingBar extends StatelessWidget {
       ],
     );
   }
+
+  /// پیش‌بینی فاصله‌ی آینده برای هر ارزیابی.
+  String _intervalHint(FlashCard card, Rating rating) {
+    final r = Sm2.schedule(
+      quality: rating.quality,
+      repetitions: card.repetitions,
+      easeFactor: card.easeFactor,
+      interval: card.interval,
+    );
+    if (r.interval == 1) return 'فردا';
+    return '${Fa.digits(r.interval)} روز بعد';
+  }
 }
 
 class _RateButton extends StatelessWidget {
-  const _RateButton(
-      {required this.label, required this.color, required this.onTap});
+  const _RateButton({
+    required this.label,
+    required this.color,
+    required this.hint,
+    required this.onTap,
+  });
   final String label;
   final Color color;
+  final String hint;
   final VoidCallback onTap;
 
   @override
@@ -598,17 +692,28 @@ class _RateButton extends StatelessWidget {
       onTap: onTap,
       borderRadius: BorderRadius.circular(12),
       child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 16),
+        padding: const EdgeInsets.symmetric(vertical: 12),
         decoration: BoxDecoration(
           color: color.withValues(alpha: 0.12),
           borderRadius: BorderRadius.circular(12),
           border: Border.all(color: color.withValues(alpha: 0.5)),
         ),
-        child: Text(
-          label,
-          textAlign: TextAlign.center,
-          style: TextStyle(
-              fontSize: 15, fontWeight: FontWeight.w600, color: color),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              label,
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                  fontSize: 15, fontWeight: FontWeight.w600, color: color),
+            ),
+            const SizedBox(height: 2),
+            Text(
+              hint,
+              textAlign: TextAlign.center,
+              style: TextStyle(fontSize: 10, color: color.withValues(alpha: 0.7)),
+            ),
+          ],
         ),
       ),
     );
