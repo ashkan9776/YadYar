@@ -1,7 +1,7 @@
 /// حالت تم اپ. مقدار ذخیره‌شده در دیتابیس همین نام‌هاست.
 enum AppThemeMode { system, light, dark }
 
-/// تنظیمات کاربر — یادآوری روزانه، هدف مطالعه، تم، صدا و لرزش.
+/// تنظیمات کاربر — یادآوری روزانه، هدف مطالعه، تم، صدا، لرزش و وضعیت پرو.
 class AppSettings {
   const AppSettings({
     this.reminderEnabled = true,
@@ -12,6 +12,8 @@ class AppSettings {
     this.typedAnswerMode = false,
     this.soundEnabled = true,
     this.hapticsEnabled = true,
+    this.isPro = false,
+    this.proActivatedAt,
   });
 
   /// آیا یادآوری روزانه فعال است؟
@@ -36,6 +38,12 @@ class AppSettings {
   /// آیا لرزش (هپتیک) فعال است؟
   final bool hapticsEnabled;
 
+  /// آیا نسخه حرفه‌ای فعال است؟
+  final bool isPro;
+
+  /// تاریخ فعال‌سازی نسخه حرفه‌ای (null = فعال نشده).
+  final DateTime? proActivatedAt;
+
   static const defaults = AppSettings();
 
   AppSettings copyWith({
@@ -47,6 +55,8 @@ class AppSettings {
     bool? typedAnswerMode,
     bool? soundEnabled,
     bool? hapticsEnabled,
+    bool? isPro,
+    DateTime? proActivatedAt,
   }) {
     return AppSettings(
       reminderEnabled: reminderEnabled ?? this.reminderEnabled,
@@ -57,6 +67,8 @@ class AppSettings {
       typedAnswerMode: typedAnswerMode ?? this.typedAnswerMode,
       soundEnabled: soundEnabled ?? this.soundEnabled,
       hapticsEnabled: hapticsEnabled ?? this.hapticsEnabled,
+      isPro: isPro ?? this.isPro,
+      proActivatedAt: proActivatedAt ?? this.proActivatedAt,
     );
   }
 
@@ -69,6 +81,8 @@ class AppSettings {
         'typedAnswerMode': typedAnswerMode,
         'soundEnabled': soundEnabled,
         'hapticsEnabled': hapticsEnabled,
+        'isPro': isPro,
+        'proActivatedAt': proActivatedAt?.toIso8601String(),
       };
 
   factory AppSettings.fromMap(Map<String, Object?> map) => AppSettings(
@@ -83,5 +97,9 @@ class AppSettings {
         typedAnswerMode: (map['typedAnswerMode'] as bool?) ?? false,
         soundEnabled: (map['soundEnabled'] as bool?) ?? true,
         hapticsEnabled: (map['hapticsEnabled'] as bool?) ?? true,
+        isPro: (map['isPro'] as bool?) ?? false,
+        proActivatedAt: map['proActivatedAt'] != null
+            ? DateTime.tryParse(map['proActivatedAt'] as String)
+            : null,
       );
 }

@@ -7,24 +7,26 @@ import '../db/app_database.dart';
 import '../models/app_snapshot.dart';
 
 /// سرویس پشتیبان‌گیری و بازیابی — خواندن/نوشتن کل دیتابیس به‌صورت JSON.
-/// الگوی کار با سِم‌بَست دقیقاً مطابق repositoryهای موجود است.
 class BackupService {
   BackupService(this._db);
 
   final AppDatabase _db;
 
-  /// ساخت عکس‌فوری از کل دیتابیس (همه‌ی دک‌ها، کارت‌ها، مرورها و تنظیمات).
+  /// ساخت عکس‌فوری از کل دیتابیس.
   Future<AppSnapshot> exportSnapshot() async {
+    final categories = await AppDatabase.categories.find(_db.db);
+    final books = await AppDatabase.books.find(_db.db);
     final decks = await AppDatabase.decks.find(_db.db);
     final cards = await AppDatabase.cards.find(_db.db);
     final reviews = await AppDatabase.reviews.find(_db.db);
-    // RecordRef.get مقدار خام را مستقیماً برمی‌گرداند (نه snapshot).
     final settingsRec =
         await AppDatabase.settings.record('app').get(_db.db);
 
     return AppSnapshot(
       version: AppSnapshot.currentVersion,
       exportedAt: DateTime.now().millisecondsSinceEpoch,
+      categories: categories.map((r) => r.value).toList(),
+      books: books.map((r) => r.value).toList(),
       decks: decks.map((r) => r.value).toList(),
       cards: cards.map((r) => r.value).toList(),
       reviews: reviews.map((r) => r.value).toList(),
@@ -33,7 +35,6 @@ class BackupService {
   }
 
   /// ذخیره‌ی عکس‌فوری در فایل موقت و بازگرداندن مسیر آن.
-  /// از دایرکتوری موقت سیستم استفاده می‌کنیم تا نیاز به مجوز ذخیره‌سازی نداشته باشد.
   Future<String> saveToFile(AppSnapshot snapshot) async {
     final dir = await getTemporaryDirectory();
     final now = DateTime.now();
@@ -44,14 +45,25 @@ class BackupService {
   }
 
   /// بارگذاری عکس‌فوری و بازنویسی کل دیتابیس (درون یک تراکنش اتمیک).
-  /// اگر فرمت نامعتبر باشد پرتاب می‌کند.
   Future<void> importSnapshot(AppSnapshot snapshot) async {
     await _db.db.transaction((txn) async {
-      // پاک‌سازی کامل — حذف همه‌ی رکوردها از هر استور.
+      // پاک‌سازی کامل.
+      await AppDatabase.categories.delete(txn);
+      await AppDatabase.books.delete(txn);
       await AppDatabase.decks.delete(txn);
       await AppDatabase.cards.delete(txn);
       await AppDatabase.reviews.delete(txn);
       await AppDatabase.settings.delete(txn);
+
+      // بازسازی دسته‌بندی‌ها (نسخه ۲ به بعد).
+      for (final record in snapshot.categories ?? const []) {
+        await AppDatabase.categories.add(txn, record);
+      }
+
+      // بازسازی کتاب‌ها (نسخه ۲ به بعد).
+      for (final record in snapshot.books ?? const []) {
+        await AppDatabase.books.add(txn, record);
+      }
 
       // بازسازی دک‌ها.
       for (final record in snapshot.decks) {

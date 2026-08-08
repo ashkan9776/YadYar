@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'app.dart';
 import 'core/notifications.dart';
+import 'core/services/purchase_service.dart';
 import 'data/db/app_database.dart';
 import 'data/repositories/card_repository.dart';
 import 'data/repositories/review_repository.dart';
@@ -40,6 +41,9 @@ Future<void> main() async {
     streakDays: stats.streakDays,
     dueCount: dueCount,
   );
+
+  // راه‌اندازی سرویس خرید کافه‌بازار.
+  await PurchaseService.instance.init();
 
   runApp(
     ProviderScope(

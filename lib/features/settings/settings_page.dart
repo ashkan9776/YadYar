@@ -4,9 +4,11 @@ import 'package:go_router/go_router.dart';
 
 import '../../core/notifications.dart';
 import '../../core/persian.dart';
+import '../../core/services/purchase_service.dart';
 import '../../core/sound.dart';
 import '../../core/theme/app_colors.dart';
 import '../../data/models/app_settings.dart';
+import '../../features/premium/premium_dialog.dart';
 import '../../providers/providers.dart';
 
 /// صفحه‌ی تنظیمات — یادآوری روزانه و هدف مطالعه.
@@ -32,6 +34,10 @@ class SettingsPage extends ConsumerWidget {
         child: ListView(
           padding: const EdgeInsets.fromLTRB(20, 12, 20, 32),
           children: [
+            _SectionLabel('نسخه حرفه‌ای'),
+            const SizedBox(height: 10),
+            _PremiumCard(settings: settings),
+            const SizedBox(height: 24),
             _SectionLabel('یادآوری'),
             const SizedBox(height: 10),
             _Card(
@@ -264,6 +270,167 @@ class _SectionLabel extends StatelessWidget {
   Widget build(BuildContext context) {
     return Text(text,
         style: TextStyle(fontSize: 12, color: context.colors.textMuted));
+  }
+}
+
+/// بخش نسخه حرفه‌ای در تنظیمات.
+class _PremiumCard extends ConsumerStatefulWidget {
+  const _PremiumCard({required this.settings});
+  final AppSettings settings;
+
+  @override
+  ConsumerState<_PremiumCard> createState() => _PremiumCardState();
+}
+
+class _PremiumCardState extends ConsumerState<_PremiumCard> {
+  bool _restoring = false;
+
+  @override
+  Widget build(BuildContext context) {
+    final isPro = widget.settings.isPro;
+
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        gradient: isPro
+            ? null
+            : LinearGradient(
+                begin: Alignment.topRight,
+                end: Alignment.bottomLeft,
+                colors: [
+                  Colors.amber.withValues(alpha: 0.12),
+                  context.colors.accent.withValues(alpha: 0.10),
+                ],
+              ),
+        color: isPro ? context.colors.bg2 : null,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+            color: isPro
+                ? context.colors.teal.withValues(alpha: 0.3)
+                : Colors.amber.withValues(alpha: 0.3)),
+      ),
+      child: isPro ? _buildProActive(context) : _buildUpgrade(context),
+    );
+  }
+
+  Widget _buildProActive(BuildContext context) {
+    final date = widget.settings.proActivatedAt;
+    final dateStr = date != null ? Fa.fullDate(date) : '';
+
+    return Row(
+      children: [
+        const Icon(Icons.workspace_premium_rounded,
+            color: Colors.amber, size: 32),
+        const SizedBox(width: 12),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text('نسخه حرفه‌ای فعال است',
+                  style: TextStyle(
+                      fontSize: 15,
+                      fontWeight: FontWeight.w600,
+                      color: context.colors.textPrimary)),
+              if (dateStr.isNotEmpty)
+                Text('از $dateStr',
+                    style: TextStyle(
+                        fontSize: 12, color: context.colors.textMuted)),
+            ],
+          ),
+        ),
+        Icon(Icons.check_circle_rounded, color: context.colors.teal, size: 24),
+      ],
+    );
+  }
+
+  Widget _buildUpgrade(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Row(
+          children: [
+            const Icon(Icons.workspace_premium_rounded,
+                color: Colors.amber, size: 28),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Text('یادیار پرو',
+                  style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w700,
+                      color: context.colors.textPrimary)),
+            ),
+          ],
+        ),
+        const SizedBox(height: 8),
+        Text(
+          'محدودیت‌ها را بردارید: دسته‌بندی، کتاب و دک نامحدود، تا ۵۰ کارت به ازای هر دک.',
+          style: TextStyle(
+              fontSize: 12,
+              color: context.colors.textSecondary,
+              height: 1.5),
+        ),
+        const SizedBox(height: 14),
+        FilledButton.icon(
+          onPressed: () => showPremiumDialog(context, ref),
+          icon: const Icon(Icons.workspace_premium_rounded, size: 18),
+          label: const Text('ارتقا به نسخه حرفه‌ای'),
+          style: FilledButton.styleFrom(
+            backgroundColor: Colors.amber,
+            foregroundColor: Colors.black87,
+            padding: const EdgeInsets.symmetric(vertical: 12),
+            shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12)),
+          ),
+        ),
+        const SizedBox(height: 8),
+        TextButton.icon(
+          onPressed: _restoring ? null : _restorePurchase,
+          icon: _restoring
+              ? const SizedBox(
+                  width: 16,
+                  height: 16,
+                  child: CircularProgressIndicator(strokeWidth: 2))
+              : const Icon(Icons.restore_rounded, size: 18),
+          label: Text(_restoring ? 'در حال بازیابی...' : 'بازیابی خرید',
+              style: const TextStyle(fontSize: 13)),
+          style: TextButton.styleFrom(
+            foregroundColor: context.colors.textSecondary,
+          ),
+        ),
+      ],
+    );
+  }
+
+  Future<void> _restorePurchase() async {
+    setState(() => _restoring = true);
+    try {
+      final ok = await PurchaseService.instance.restorePurchase();
+      if (ok && mounted) {
+        final repo = ref.read(settingsRepositoryProvider);
+        final current = ref.read(settingsProvider);
+        await repo.save(current.copyWith(
+          isPro: true,
+          proActivatedAt: DateTime.now(),
+        ));
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('خرید شما با موفقیت بازیابی شد ✅')),
+          );
+        }
+      } else if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('خریدی برای بازیابی یافت نشد.')),
+        );
+      }
+    } catch (_) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('خطا در بازیابی خرید.')),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _restoring = false);
+    }
   }
 }
 

@@ -3,28 +3,28 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../core/theme/app_colors.dart';
-import '../../data/models/deck.dart';
+import '../../data/models/book.dart';
 import '../../providers/providers.dart';
 
-/// ساخت یا ویرایش یک دک (نام، توضیح، رنگ).
-class DeckEditPage extends ConsumerStatefulWidget {
-  const DeckEditPage({super.key, this.deckId, this.bookId});
-  final int? deckId;
+/// ساخت یا ویرایش یک کتاب (نام، توضیح، رنگ).
+class BookEditPage extends ConsumerStatefulWidget {
+  const BookEditPage({super.key, this.bookId, this.categoryId});
   final int? bookId;
+  final int? categoryId;
 
   @override
-  ConsumerState<DeckEditPage> createState() => _DeckEditPageState();
+  ConsumerState<BookEditPage> createState() => _BookEditPageState();
 }
 
-class _DeckEditPageState extends ConsumerState<DeckEditPage> {
+class _BookEditPageState extends ConsumerState<BookEditPage> {
   final _formKey = GlobalKey<FormState>();
   final _title = TextEditingController();
   final _desc = TextEditingController();
   int _colorHex = AppColors.deckPalette.first;
-  Deck? _existing;
+  Book? _existing;
   bool _loaded = false;
 
-  bool get _isEdit => widget.deckId != null;
+  bool get _isEdit => widget.bookId != null;
 
   @override
   void initState() {
@@ -33,13 +33,14 @@ class _DeckEditPageState extends ConsumerState<DeckEditPage> {
   }
 
   Future<void> _load() async {
-    final deck = await ref.read(deckRepositoryProvider).getById(widget.deckId!);
-    if (deck != null && mounted) {
+    final book =
+        await ref.read(bookRepositoryProvider).getById(widget.bookId!);
+    if (book != null && mounted) {
       setState(() {
-        _existing = deck;
-        _title.text = deck.title;
-        _desc.text = deck.description ?? '';
-        _colorHex = deck.colorHex;
+        _existing = book;
+        _title.text = book.title;
+        _desc.text = book.description ?? '';
+        _colorHex = book.colorHex;
         _loaded = true;
       });
     } else {
@@ -56,21 +57,20 @@ class _DeckEditPageState extends ConsumerState<DeckEditPage> {
 
   Future<void> _save() async {
     if (!_formKey.currentState!.validate()) return;
-    final repo = ref.read(deckRepositoryProvider);
+    final repo = ref.read(bookRepositoryProvider);
     final title = _title.text.trim();
     final desc = _desc.text.trim().isEmpty ? null : _desc.text.trim();
 
     if (_isEdit && _existing != null) {
-      await repo.update(_existing!
-          .copyWith(title: title, description: desc, colorHex: _colorHex));
+      await repo.update(
+          _existing!.copyWith(title: title, description: desc, colorHex: _colorHex));
     } else {
-      await repo.add(Deck(
-        bookId: widget.bookId!,
+      await repo.add(Book(
+        categoryId: widget.categoryId!,
         title: title,
         description: desc,
         colorHex: _colorHex,
         createdAt: DateTime.now(),
-        isBuiltIn: false,
       ));
     }
     if (mounted) context.pop();
@@ -79,26 +79,25 @@ class _DeckEditPageState extends ConsumerState<DeckEditPage> {
   @override
   Widget build(BuildContext context) {
     if (_isEdit && !_loaded) {
-      return const Scaffold(
-          body: Center(child: CircularProgressIndicator()));
+      return const Scaffold(body: Center(child: CircularProgressIndicator()));
     }
     return Scaffold(
-      appBar: AppBar(title: Text(_isEdit ? 'ویرایش دک' : 'دک جدید')),
+      appBar: AppBar(title: Text(_isEdit ? 'ویرایش کتاب' : 'کتاب جدید')),
       body: SafeArea(
         child: Form(
           key: _formKey,
           child: ListView(
             padding: const EdgeInsets.all(20),
             children: [
-              Text('نام دک',
+              Text('نام کتاب',
                   style: TextStyle(fontSize: 12, color: context.colors.textMuted)),
               const SizedBox(height: 6),
               TextFormField(
                 controller: _title,
-                decoration:
-                    const InputDecoration(hintText: 'مثلاً: زیست‌شناسی فصل ۳'),
+                decoration: const InputDecoration(
+                    hintText: 'مثلاً: Complete IELTS Bands 5-6.5'),
                 validator: (v) => (v == null || v.trim().isEmpty)
-                    ? 'نام دک را وارد کن'
+                    ? 'نام کتاب را وارد کن'
                     : null,
               ),
               const SizedBox(height: 16),
@@ -107,11 +106,10 @@ class _DeckEditPageState extends ConsumerState<DeckEditPage> {
               const SizedBox(height: 6),
               TextFormField(
                 controller: _desc,
-                decoration:
-                    const InputDecoration(hintText: 'یک توضیح کوتاه'),
+                decoration: const InputDecoration(hintText: 'یک توضیح کوتاه'),
               ),
               const SizedBox(height: 20),
-              Text('رنگ دک',
+              Text('رنگ',
                   style: TextStyle(fontSize: 12, color: context.colors.textMuted)),
               const SizedBox(height: 10),
               Wrap(
@@ -129,7 +127,7 @@ class _DeckEditPageState extends ConsumerState<DeckEditPage> {
               const SizedBox(height: 32),
               ElevatedButton(
                 onPressed: _save,
-                child: Text(_isEdit ? 'ذخیره' : 'ساخت دک'),
+                child: Text(_isEdit ? 'ذخیره' : 'ساخت کتاب'),
               ),
             ],
           ),

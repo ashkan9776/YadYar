@@ -30,9 +30,9 @@ class HomeShell extends StatelessWidget {
               label: 'خانه',
             ),
             BottomNavigationBarItem(
-              icon: Icon(Icons.style_outlined),
-              activeIcon: Icon(Icons.style_rounded),
-              label: 'دک‌ها',
+              icon: Icon(Icons.category_outlined),
+              activeIcon: Icon(Icons.category_rounded),
+              label: 'دسته‌ها',
             ),
             BottomNavigationBarItem(
               icon: Icon(Icons.bar_chart_outlined),

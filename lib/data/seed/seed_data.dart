@@ -1,38 +1,93 @@
+import 'package:sembast/sembast.dart';
+
 import '../db/app_database.dart';
+import '../models/book.dart';
+import '../models/category.dart';
 import '../models/deck.dart';
 import '../models/flashcard.dart';
+import '../repositories/book_repository.dart';
 import '../repositories/card_repository.dart';
+import '../repositories/category_repository.dart';
 import '../repositories/deck_repository.dart';
 
-/// داده‌های اولیه: سه دک آماده مطابق PRD (کنکور / IELTS / استخدامی).
+/// داده‌های اولیه: یک دسته General + کتاب پیش‌فرض + سه دک آماده.
 class SeedData {
   SeedData._();
 
-  /// اگر دیتابیس خالی است، دک‌ها و کارت‌های نمونه را می‌سازد.
+  /// اگر دیتابیس خالی است، دسته‌بندی و کتاب و دک‌های نمونه را می‌سازد.
+  /// همچنین دک‌های قدیمی (بدون bookId) را مهاجرت می‌کند.
   static Future<void> ensureSeeded(AppDatabase db) async {
+    final catRepo = CategoryRepository(db);
+    final bookRepo = BookRepository(db);
     final deckRepo = DeckRepository(db);
     final cardRepo = CardRepository(db);
-    if (await deckRepo.count() > 0) return;
 
-    final now = DateTime.now();
+    final categoriesExist = await catRepo.count() > 0;
 
-    for (final spec in _decks) {
-      final deckId = await deckRepo.add(Deck(
-        title: spec.title,
-        description: spec.description,
-        colorHex: spec.colorHex,
+    if (!categoriesExist) {
+      // ایجاد دسته‌بندی General.
+      final now = DateTime.now();
+      final categoryId = await catRepo.add(Category(
+        title: 'General',
+        description: 'دک‌های عمومی و متنوع',
+        iconIndex: 6, // Icons.category
+        colorHex: 0xFF7F77DD,
         createdAt: now,
         isBuiltIn: true,
+        sortOrder: 0,
       ));
-      final cards = spec.cards
-          .map((qa) => FlashCard(
-                deckId: deckId,
-                front: qa.$1,
-                back: qa.$2,
-                nextReview: now,
-              ))
-          .toList();
-      await cardRepo.addAll(cards);
+
+      // ایجاد کتاب پیش‌فرض.
+      final bookId = await bookRepo.add(Book(
+        categoryId: categoryId,
+        title: 'دک‌های پیش‌فرض',
+        description: 'دک‌های آماده همراه با اپلیکیشن',
+        colorHex: 0xFF7F77DD,
+        createdAt: now,
+        isBuiltIn: true,
+        sortOrder: 0,
+      ));
+
+      // ایجاد سه دک آماده.
+      for (final spec in _decks) {
+        final deckId = await deckRepo.add(Deck(
+          bookId: bookId,
+          title: spec.title,
+          description: spec.description,
+          colorHex: spec.colorHex,
+          createdAt: now,
+          isBuiltIn: true,
+        ));
+        final cards = spec.cards
+            .map((qa) => FlashCard(
+                  deckId: deckId,
+                  front: qa.$1,
+                  back: qa.$2,
+                  nextReview: now,
+                ))
+            .toList();
+        await cardRepo.addAll(cards);
+      }
+    } else {
+      // مهاجرت: دک‌هایی که bookId ندارن رو به اولین کتاب اختصاص بده.
+      await _migrateOldDecks(db);
+    }
+  }
+
+  /// دک‌های قدیمی که فیلد bookId ندارند را به کتاب اول اختصاص می‌دهد.
+  static Future<void> _migrateOldDecks(AppDatabase db) async {
+    final allDecks = await AppDatabase.decks.find(db.db);
+    final firstBook = await AppDatabase.books.findFirst(db.db);
+
+    if (firstBook == null) return;
+
+    for (final record in allDecks) {
+      if (record.value['bookId'] == null) {
+        record.value['bookId'] = firstBook.key;
+        await AppDatabase.decks
+            .record(record.key)
+            .put(db.db, record.value);
+      }
     }
   }
 

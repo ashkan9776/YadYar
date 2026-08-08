@@ -11,6 +11,8 @@ class AppDatabase {
   static const _dbFileName = 'yadyar.db';
 
   // استورها (معادل جدول‌ها) با کلید عددی خودافزا.
+  static final categories = intMapStoreFactory.store('categories');
+  static final books = intMapStoreFactory.store('books');
   static final decks = intMapStoreFactory.store('decks');
   static final cards = intMapStoreFactory.store('cards');
   static final reviews = intMapStoreFactory.store('reviews');

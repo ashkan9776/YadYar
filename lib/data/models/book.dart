@@ -1,61 +1,67 @@
-/// یک دک (مجموعه فلش‌کارت). مطابق جدول Deck در PRD.
-class Deck {
-  const Deck({
+/// یک کتاب (مجموعه‌ای از دک‌ها) که زیرمجموعه‌ی یک دسته‌بندی است.
+class Book {
+  const Book({
     this.id,
-    required this.bookId,
+    required this.categoryId,
     required this.title,
     this.description,
     required this.colorHex,
     required this.createdAt,
     this.isBuiltIn = false,
+    this.sortOrder = 0,
   });
 
-  /// شناسه یکتا (کلید سِم‌بَست). برای دک ذخیره‌نشده null است.
+  /// شناسه یکتا (کلید سِم‌بَست). برای کتاب ذخیره‌نشده null است.
   final int? id;
-  final int bookId;
+  final int categoryId;
   final String title;
   final String? description;
   final int colorHex;
   final DateTime createdAt;
   final bool isBuiltIn;
+  final int sortOrder;
 
-  Deck copyWith({
+  Book copyWith({
     int? id,
-    int? bookId,
+    int? categoryId,
     String? title,
     String? description,
     int? colorHex,
     DateTime? createdAt,
     bool? isBuiltIn,
+    int? sortOrder,
   }) {
-    return Deck(
+    return Book(
       id: id ?? this.id,
-      bookId: bookId ?? this.bookId,
+      categoryId: categoryId ?? this.categoryId,
       title: title ?? this.title,
       description: description ?? this.description,
       colorHex: colorHex ?? this.colorHex,
       createdAt: createdAt ?? this.createdAt,
       isBuiltIn: isBuiltIn ?? this.isBuiltIn,
+      sortOrder: sortOrder ?? this.sortOrder,
     );
   }
 
   Map<String, Object?> toMap() => {
-        'bookId': bookId,
+        'categoryId': categoryId,
         'title': title,
         'description': description,
         'colorHex': colorHex,
         'createdAt': createdAt.millisecondsSinceEpoch,
         'isBuiltIn': isBuiltIn,
+        'sortOrder': sortOrder,
       };
 
-  factory Deck.fromMap(int id, Map<String, Object?> map) => Deck(
+  factory Book.fromMap(int id, Map<String, Object?> map) => Book(
         id: id,
-        bookId: (map['bookId'] as int?) ?? 0,
+        categoryId: map['categoryId'] as int,
         title: map['title'] as String,
         description: map['description'] as String?,
         colorHex: map['colorHex'] as int,
         createdAt:
             DateTime.fromMillisecondsSinceEpoch(map['createdAt'] as int),
         isBuiltIn: (map['isBuiltIn'] as bool?) ?? false,
+        sortOrder: (map['sortOrder'] as int?) ?? 0,
       );
 }

@@ -37,10 +37,29 @@ class DeckRepository {
     return records.map((r) => Deck.fromMap(r.key, r.value)).toList();
   }
 
+  Future<List<Deck>> getByBook(int bookId) async {
+    final records = await _store.find(_db.db,
+        finder: Finder(
+            filter: Filter.equals('bookId', bookId),
+            sortOrders: [SortOrder('createdAt')]));
+    return records.map((r) => Deck.fromMap(r.key, r.value)).toList();
+  }
+
   /// جریان زنده‌ی همه‌ی دک‌ها (مرتب‌شده بر اساس تاریخ ایجاد).
   Stream<List<Deck>> watchAll() {
     return _store
         .query(finder: Finder(sortOrders: [SortOrder('createdAt')]))
+        .onSnapshots(_db.db)
+        .map((records) =>
+            records.map((r) => Deck.fromMap(r.key, r.value)).toList());
+  }
+
+  /// جریان زنده‌ی دک‌های یک کتاب.
+  Stream<List<Deck>> watchByBook(int bookId) {
+    return _store
+        .query(finder: Finder(
+            filter: Filter.equals('bookId', bookId),
+            sortOrders: [SortOrder('createdAt')]))
         .onSnapshots(_db.db)
         .map((records) =>
             records.map((r) => Deck.fromMap(r.key, r.value)).toList());

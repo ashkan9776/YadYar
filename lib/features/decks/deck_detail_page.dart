@@ -3,9 +3,11 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../core/persian.dart';
+import '../../core/services/freemium_service.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/widgets/math_text.dart';
 import '../../data/models/flashcard.dart';
+import '../../features/premium/premium_dialog.dart';
 import '../../providers/providers.dart';
 import 'card_editor_sheet.dart';
 
@@ -20,6 +22,8 @@ class DeckDetailPage extends ConsumerWidget {
     final deck = decks.where((d) => d.id == deckId).firstOrNull;
     final cardsAsync = ref.watch(deckCardsProvider(deckId));
     final due = ref.watch(dueCountsProvider)[deckId] ?? 0;
+    final isPro = ref.watch(isProProvider);
+    final cardCount = ref.watch(cardsInDeckCountProvider(deckId));
 
     final color = deck == null ? context.colors.accent : Color(deck.colorHex);
 
@@ -48,8 +52,17 @@ class DeckDetailPage extends ConsumerWidget {
         backgroundColor: color,
         foregroundColor: Colors.white,
         icon: const Icon(Icons.add_rounded),
-        label: const Text('کارت جدید'),
-        onPressed: () => showCardEditorSheet(context, ref, deckId: deckId),
+        label: Text(isPro
+            ? 'کارت جدید'
+            : 'کارت جدید (${Fa.digits(cardCount)}/${Fa.digits(FreemiumLimits.maxCardsPerDeck)})'),
+        onPressed: () {
+          if (!FreemiumLimits.canCreateCard(cardCount, isPro)) {
+            showPremiumDialog(context, ref,
+                reason: FreemiumLimits.limitMessage('card'));
+          } else {
+            showCardEditorSheet(context, ref, deckId: deckId);
+          }
+        },
       ),
       body: SafeArea(
         child: cardsAsync.when(
