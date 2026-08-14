@@ -15,8 +15,7 @@ class DataManagementPage extends ConsumerStatefulWidget {
   const DataManagementPage({super.key});
 
   @override
-  ConsumerState<DataManagementPage> createState() =>
-      _DataManagementPageState();
+  ConsumerState<DataManagementPage> createState() => _DataManagementPageState();
 }
 
 class _DataManagementPageState extends ConsumerState<DataManagementPage> {
@@ -38,28 +37,35 @@ class _DataManagementPageState extends ConsumerState<DataManagementPage> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text('خروجی JSON',
-                      style: TextStyle(
-                          fontSize: 15,
-                          fontWeight: FontWeight.w600,
-                          color: c.textPrimary)),
+                  Text(
+                    'خروجی JSON',
+                    style: TextStyle(
+                      fontSize: 15,
+                      fontWeight: FontWeight.w600,
+                      color: c.textPrimary,
+                    ),
+                  ),
                   const SizedBox(height: 4),
                   Text(
-                      'فایل شامل همه‌ی دک‌ها، کارت‌ها، مرورها و تنظیمات. '
-                      'از طریق اشتراک‌گذاری به هر جا که بخوای بفرستش.',
-                      style: TextStyle(fontSize: 12, color: c.textMuted)),
+                    'فایل شامل همه‌ی دک‌ها، کارت‌ها، مرورها و تنظیمات. '
+                    'از طریق اشتراک‌گذاری به هر جا که بخوای بفرستش.',
+                    style: TextStyle(fontSize: 12, color: c.textMuted),
+                  ),
                   const SizedBox(height: 14),
                   SizedBox(
                     width: double.infinity,
                     child: ElevatedButton.icon(
-                      onPressed:
-                          _exporting ? null : () => _handleExport(context),
+                      onPressed: _exporting
+                          ? null
+                          : () => _handleExport(context),
                       icon: _exporting
                           ? const SizedBox(
                               width: 18,
                               height: 18,
                               child: CircularProgressIndicator(
-                                  strokeWidth: 2, color: Colors.white),
+                                strokeWidth: 2,
+                                color: Colors.white,
+                              ),
                             )
                           : const Icon(Icons.share_rounded, size: 20),
                       label: Text(
@@ -83,32 +89,41 @@ class _DataManagementPageState extends ConsumerState<DataManagementPage> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text('وارد کردن فایل',
-                      style: TextStyle(
-                          fontSize: 15,
-                          fontWeight: FontWeight.w600,
-                          color: c.textPrimary)),
+                  Text(
+                    'وارد کردن فایل',
+                    style: TextStyle(
+                      fontSize: 15,
+                      fontWeight: FontWeight.w600,
+                      color: c.textPrimary,
+                    ),
+                  ),
                   const SizedBox(height: 4),
                   Text(
-                      'داده‌های فعلی با فایل پشتیبان جایگزین می‌شوند. '
-                      'قبل از وارد کردن، حتماً یک پشتیبان بگیر!',
-                      style: TextStyle(fontSize: 12, color: c.textMuted)),
+                    'داده‌های فعلی با فایل پشتیبان جایگزین می‌شوند. '
+                    'قبل از وارد کردن، حتماً یک پشتیبان بگیر!',
+                    style: TextStyle(fontSize: 12, color: c.textMuted),
+                  ),
                   const SizedBox(height: 14),
                   SizedBox(
                     width: double.infinity,
                     child: ElevatedButton.icon(
-                      onPressed:
-                          _importing ? null : () => _handleImport(context),
+                      onPressed: _importing
+                          ? null
+                          : () => _handleImport(context),
                       icon: _importing
                           ? const SizedBox(
                               width: 18,
                               height: 18,
                               child: CircularProgressIndicator(
-                                  strokeWidth: 2, color: Colors.white),
+                                strokeWidth: 2,
+                                color: Colors.white,
+                              ),
                             )
                           : const Icon(Icons.restore_rounded, size: 20),
                       label: Text(
-                        _importing ? 'در حال بارگذاری...' : 'انتخاب فایل و بازیابی',
+                        _importing
+                            ? 'در حال بارگذاری...'
+                            : 'انتخاب فایل و بازیابی',
                         style: const TextStyle(fontSize: 14),
                       ),
                       style: ElevatedButton.styleFrom(
@@ -128,24 +143,30 @@ class _DataManagementPageState extends ConsumerState<DataManagementPage> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text('حذف همه‌ی داده‌ها',
-                      style: TextStyle(
-                          fontSize: 15,
-                          fontWeight: FontWeight.w600,
-                          color: c.red)),
+                  Text(
+                    'حذف محتوای مطالعه',
+                    style: TextStyle(
+                      fontSize: 15,
+                      fontWeight: FontWeight.w600,
+                      color: c.red,
+                    ),
+                  ),
                   const SizedBox(height: 4),
                   Text(
-                      'دک‌ها، کارت‌ها و تاریخچه‌ی مرورها حذف خواهند شد. '
-                      'این عمل قابل بازگشت نیست!',
-                      style: TextStyle(fontSize: 12, color: c.textMuted)),
+                    'دسته‌بندی‌ها، کتاب‌ها، دک‌ها، کارت‌ها و تاریخچه‌ی مرور حذف می‌شوند. '
+                    'تنظیمات برنامه باقی می‌مانند. این عمل قابل بازگشت نیست!',
+                    style: TextStyle(fontSize: 12, color: c.textMuted),
+                  ),
                   const SizedBox(height: 14),
                   SizedBox(
                     width: double.infinity,
                     child: OutlinedButton.icon(
                       onPressed: () => _handleReset(context),
                       icon: const Icon(Icons.delete_forever_rounded, size: 20),
-                      label: Text('حذف همه‌ی داده‌ها',
-                          style: TextStyle(fontSize: 14, color: c.red)),
+                      label: Text(
+                        'حذف محتوای مطالعه',
+                        style: TextStyle(fontSize: 14, color: c.red),
+                      ),
                       style: OutlinedButton.styleFrom(
                         foregroundColor: c.red,
                         side: BorderSide(color: c.red.withValues(alpha: 0.5)),
@@ -176,8 +197,9 @@ class _DataManagementPageState extends ConsumerState<DataManagementPage> {
       final xFile = XFile(filePath, name: 'yadyar_backup_$dateStr.json');
 
       // ignore: deprecated_member_use
-      await Share.shareXFiles([xFile],
-          text: 'پشتیبان یادیار — ${Fa.fullDate(DateTime.now())}');
+      await Share.shareXFiles([
+        xFile,
+      ], text: 'پشتیبان یادیار — ${Fa.fullDate(DateTime.now())}');
 
       if (!context.mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
@@ -205,8 +227,7 @@ class _DataManagementPageState extends ConsumerState<DataManagementPage> {
       context: context,
       builder: (ctx) => AlertDialog(
         title: const Text('بازیابی از فایل'),
-        content: const Text(
-            'داده‌های فعلی جایگزین می‌شوند. آیا مطمئنی؟'),
+        content: const Text('داده‌های فعلی جایگزین می‌شوند. آیا مطمئنی؟'),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx, false),
@@ -233,13 +254,9 @@ class _DataManagementPageState extends ConsumerState<DataManagementPage> {
         return;
       }
 
-      final snapshot =
-          BackupService.loadFromFile(result.files.single.path!);
-
-      // اعتبارسنجی ساده.
-      if (snapshot.version == 0) {
-        throw Exception('فرمت فایل نامعتبر');
-      }
+      final snapshot = await BackupService.loadFromFile(
+        result.files.single.path!,
+      );
 
       final db = ref.read(databaseProvider);
       final service = BackupService(db);
@@ -272,10 +289,11 @@ class _DataManagementPageState extends ConsumerState<DataManagementPage> {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('⚠️ حذف همه‌ی داده‌ها'),
+        title: const Text('⚠️ حذف محتوای مطالعه'),
         content: const Text(
-            'دک‌ها، کارت‌ها و تاریخچه‌ی مرورها برای همیشه حذف خواهند شد. '
-            'این عمل قابل بازگشت نیست!'),
+          'دسته‌بندی‌ها، کتاب‌ها، دک‌ها، کارت‌ها و تاریخچه‌ی مرور برای همیشه حذف می‌شوند. '
+          'تنظیمات برنامه باقی می‌مانند. این عمل قابل بازگشت نیست!',
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx, false),
@@ -284,7 +302,7 @@ class _DataManagementPageState extends ConsumerState<DataManagementPage> {
           FilledButton(
             onPressed: () => Navigator.pop(ctx, true),
             style: FilledButton.styleFrom(backgroundColor: context.colors.red),
-            child: const Text('حذف همه'),
+            child: const Text('حذف محتوا'),
           ),
         ],
       ),
@@ -293,6 +311,8 @@ class _DataManagementPageState extends ConsumerState<DataManagementPage> {
 
     final db = ref.read(databaseProvider);
     await db.db.transaction((txn) async {
+      await AppDatabase.categories.delete(txn);
+      await AppDatabase.books.delete(txn);
       await AppDatabase.decks.delete(txn);
       await AppDatabase.cards.delete(txn);
       await AppDatabase.reviews.delete(txn);
@@ -301,7 +321,7 @@ class _DataManagementPageState extends ConsumerState<DataManagementPage> {
     if (!context.mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(
-        content: Text('همه‌ی داده‌ها حذف شدند'),
+        content: Text('محتوای مطالعه حذف شد'),
         behavior: SnackBarBehavior.floating,
       ),
     );
@@ -314,8 +334,10 @@ class _SectionLabel extends StatelessWidget {
   final String text;
   @override
   Widget build(BuildContext context) {
-    return Text(text,
-        style: TextStyle(fontSize: 12, color: context.colors.textMuted));
+    return Text(
+      text,
+      style: TextStyle(fontSize: 12, color: context.colors.textMuted),
+    );
   }
 }
 

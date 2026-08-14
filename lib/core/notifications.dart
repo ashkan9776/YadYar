@@ -22,7 +22,8 @@ class NotificationService {
 
   AndroidFlutterLocalNotificationsPlugin? get _android => _plugin
       .resolvePlatformSpecificImplementation<
-          AndroidFlutterLocalNotificationsPlugin>();
+        AndroidFlutterLocalNotificationsPlugin
+      >();
 
   Future<void> init() async {
     if (_ready) return;
@@ -34,10 +35,6 @@ class NotificationService {
       const settings = InitializationSettings(android: android);
       await _plugin.initialize(settings: settings);
 
-      // مجوز نمایش نوتیفیکیشن (Android 13+).
-      await _android?.requestNotificationsPermission();
-      // مجوز زنگ دقیق (Android 12+) تا یادآوری سرِ ساعت شلیک شود.
-      await _android?.requestExactAlarmsPermission();
       _ready = true;
     } catch (e) {
       debugPrint('NotificationService init failed: $e');
@@ -113,7 +110,9 @@ class NotificationService {
 
   /// نمایش نوتیفیکیشن آنلاک دستاورد.
   Future<void> showAchievementNotification(
-      String title, String description) async {
+    String title,
+    String description,
+  ) async {
     if (!_ready) await init();
     try {
       await _plugin.show(
@@ -128,12 +127,15 @@ class NotificationService {
   }
 
   /// اعمال تنظیمات یادآوری روزانه: فعال‌سازی در ساعت مشخص یا لغو کامل.
+  /// مجوز نوتیفیکیشن تنها پس از انتخاب آگاهانه‌ی کاربر درخواست می‌شود.
   Future<void> applyReminder({
     required bool enabled,
     required int hour,
     required int minute,
   }) async {
+    if (!_ready) await init();
     if (enabled) {
+      await _android?.requestNotificationsPermission();
       await scheduleDailyReminder(hour: hour, minute: minute);
     } else {
       await cancelDailyReminder();
@@ -149,7 +151,7 @@ class NotificationService {
     }
   }
 
-  /// زمان‌بندی یادآوری روزانه‌ی تکرارشونده سرِ ساعت دقیق.
+  /// زمان‌بندی یادآوری روزانه‌ی تکرارشونده با زمان‌بندی کم‌مصرف سیستم.
   Future<void> scheduleDailyReminder({int hour = 20, int minute = 0}) async {
     if (!_ready) return;
     try {
@@ -159,7 +161,7 @@ class NotificationService {
         body: 'وقت مروره! کارت‌هات منتظرتن 🧠',
         scheduledDate: _nextInstanceOf(hour, minute),
         notificationDetails: _dailyDetails,
-        androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
+        androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
         matchDateTimeComponents: DateTimeComponents.time,
       );
     } catch (e) {
@@ -195,7 +197,7 @@ class NotificationService {
         body: body,
         scheduledDate: when,
         notificationDetails: _streakDetails,
-        androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
+        androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
       );
     } catch (e) {
       debugPrint('updateStreakReminder failed: $e');
@@ -215,8 +217,14 @@ class NotificationService {
   /// نزدیک‌ترین رخداد آینده‌ی ساعت/دقیقه‌ی داده‌شده در منطقه‌ی زمانی محلی.
   tz.TZDateTime _nextInstanceOf(int hour, int minute) {
     final now = tz.TZDateTime.now(tz.local);
-    var scheduled =
-        tz.TZDateTime(tz.local, now.year, now.month, now.day, hour, minute);
+    var scheduled = tz.TZDateTime(
+      tz.local,
+      now.year,
+      now.month,
+      now.day,
+      hour,
+      minute,
+    );
     if (!scheduled.isAfter(now)) {
       scheduled = scheduled.add(const Duration(days: 1));
     }

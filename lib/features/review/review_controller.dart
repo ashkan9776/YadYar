@@ -74,8 +74,7 @@ class ReviewState {
 
   /// نشست تمام شده یا با رسیدن به انتهای صف یا با پایان زمان تمرکز.
   bool get finished => !loading && (index >= cards.length || focusEnded);
-  FlashCard? get current =>
-      index < cards.length ? cards[index] : null;
+  FlashCard? get current => index < cards.length ? cards[index] : null;
   double get progress => total == 0 ? 0 : index / total;
 
   ReviewState copyWith({
@@ -208,22 +207,28 @@ class ReviewController extends StateNotifier<ReviewState> {
 
     final now = DateTime.now();
     final updated = Sm2.apply(card, rating.quality, now: now);
-    await _ref.read(cardRepositoryProvider).update(updated);
-    final logId = await _ref.read(reviewRepositoryProvider).add(ReviewLog(
-          cardId: card.id!,
-          deckId: card.deckId,
-          quality: rating.quality,
-          reviewedAt: now,
-          durationMs: now.difference(_cardShownAt).inMilliseconds,
-        ));
+    final logId = await _ref
+        .read(reviewRepositoryProvider)
+        .recordReview(
+          updatedCard: updated,
+          log: ReviewLog(
+            cardId: card.id!,
+            deckId: card.deckId,
+            quality: rating.quality,
+            reviewedAt: now,
+            durationMs: now.difference(_cardShownAt).inMilliseconds,
+          ),
+        );
 
     // ذخیره‌ی وضعیت پیش از ارزیابی برای امکان بازگشت.
-    _undoStack.add(_UndoEntry(
-      previousCard: card,
-      reviewLogId: logId,
-      atIndex: state.index,
-      rating: rating,
-    ));
+    _undoStack.add(
+      _UndoEntry(
+        previousCard: card,
+        reviewLogId: logId,
+        atIndex: state.index,
+        rating: rating,
+      ),
+    );
 
     var hard = state.hard, good = state.good, easy = state.easy;
     switch (rating) {
@@ -251,10 +256,15 @@ class ReviewController extends StateNotifier<ReviewState> {
   /// لغو آخرین ارزیابی: بازگرداندن کارت به وضعیت قبلی و حذف لاگ آن.
   Future<void> undo() async {
     if (_undoStack.isEmpty) return;
-    final entry = _undoStack.removeLast();
+    final entry = _undoStack.last;
 
-    await _ref.read(cardRepositoryProvider).update(entry.previousCard);
-    await _ref.read(reviewRepositoryProvider).delete(entry.reviewLogId);
+    await _ref
+        .read(reviewRepositoryProvider)
+        .undoReview(
+          previousCard: entry.previousCard,
+          reviewLogId: entry.reviewLogId,
+        );
+    _undoStack.removeLast();
 
     var hard = state.hard, good = state.good, easy = state.easy;
     switch (entry.rating) {
@@ -286,7 +296,10 @@ class ReviewController extends StateNotifier<ReviewState> {
     if (state.finished) return;
     final totalSeconds = minutes * 60;
     _focusTimer?.cancel();
-    _focusTimer = Timer.periodic(const Duration(seconds: 1), (_) => _tickFocus());
+    _focusTimer = Timer.periodic(
+      const Duration(seconds: 1),
+      (_) => _tickFocus(),
+    );
     state = state.copyWith(
       focusActive: true,
       focusRemainingSeconds: totalSeconds,
@@ -328,5 +341,5 @@ class ReviewController extends StateNotifier<ReviewState> {
 
 final reviewControllerProvider = StateNotifierProvider.autoDispose
     .family<ReviewController, ReviewState, int>((ref, deckId) {
-  return ReviewController(ref, deckId);
-});
+      return ReviewController(ref, deckId);
+    });

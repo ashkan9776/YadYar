@@ -4,7 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../core/notifications.dart';
 import '../../core/persian.dart';
-import '../../core/services/purchase_service.dart';
+
 import '../../core/sound.dart';
 import '../../core/theme/app_colors.dart';
 import '../../data/models/app_settings.dart';
@@ -46,12 +46,20 @@ class SettingsPage extends ConsumerWidget {
                   SwitchListTile(
                     contentPadding: EdgeInsets.zero,
                     activeThumbColor: context.colors.accent,
-                    title: Text('یادآوری روزانه',
-                        style: TextStyle(
-                            fontSize: 15, color: context.colors.textPrimary)),
-                    subtitle: Text('هر روز برای مرور بهت یادآوری می‌کنیم',
-                        style: TextStyle(
-                            fontSize: 12, color: context.colors.textMuted)),
+                    title: Text(
+                      'یادآوری روزانه',
+                      style: TextStyle(
+                        fontSize: 15,
+                        color: context.colors.textPrimary,
+                      ),
+                    ),
+                    subtitle: Text(
+                      'هر روز برای مرور بهت یادآوری می‌کنیم',
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: context.colors.textMuted,
+                      ),
+                    ),
                     value: settings.reminderEnabled,
                     onChanged: (v) =>
                         _save(ref, settings.copyWith(reminderEnabled: v)),
@@ -62,23 +70,32 @@ class SettingsPage extends ConsumerWidget {
                     child: ListTile(
                       contentPadding: EdgeInsets.zero,
                       enabled: settings.reminderEnabled,
-                      title: Text('ساعت یادآوری',
-                          style: TextStyle(
-                              fontSize: 15, color: context.colors.textPrimary)),
-                      trailing: Text(
-                        Fa.clock(settings.reminderHour, settings.reminderMinute),
+                      title: Text(
+                        'ساعت یادآوری',
                         style: TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.w600,
-                            color: context.colors.accent),
+                          fontSize: 15,
+                          color: context.colors.textPrimary,
+                        ),
+                      ),
+                      trailing: Text(
+                        Fa.clock(
+                          settings.reminderHour,
+                          settings.reminderMinute,
+                        ),
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
+                          color: context.colors.accent,
+                        ),
                       ),
                       onTap: settings.reminderEnabled
                           ? () async {
                               final picked = await showTimePicker(
                                 context: context,
                                 initialTime: TimeOfDay(
-                                    hour: settings.reminderHour,
-                                    minute: settings.reminderMinute),
+                                  hour: settings.reminderHour,
+                                  minute: settings.reminderMinute,
+                                ),
                               );
                               if (picked != null) {
                                 await _save(
@@ -110,10 +127,15 @@ class SettingsPage extends ConsumerWidget {
                     );
                   }
                 },
-                icon: Icon(Icons.notifications_active_outlined,
-                    size: 18, color: context.colors.accent),
-                label: Text('ارسال نوتیفیکیشن تست',
-                    style: TextStyle(color: context.colors.accent)),
+                icon: Icon(
+                  Icons.notifications_active_outlined,
+                  size: 18,
+                  color: context.colors.accent,
+                ),
+                label: Text(
+                  'ارسال نوتیفیکیشن تست',
+                  style: TextStyle(color: context.colors.accent),
+                ),
               ),
             ),
             const SizedBox(height: 14),
@@ -126,14 +148,21 @@ class SettingsPage extends ConsumerWidget {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Text('تعداد کارت در روز',
-                          style: TextStyle(
-                              fontSize: 15, color: context.colors.textPrimary)),
-                      Text('${Fa.digits(settings.dailyGoal)} کارت',
-                          style: TextStyle(
-                              fontSize: 15,
-                              fontWeight: FontWeight.w600,
-                              color: context.colors.teal)),
+                      Text(
+                        'تعداد کارت در روز',
+                        style: TextStyle(
+                          fontSize: 15,
+                          color: context.colors.textPrimary,
+                        ),
+                      ),
+                      Text(
+                        '${Fa.digits(settings.dailyGoal)} کارت',
+                        style: TextStyle(
+                          fontSize: 15,
+                          fontWeight: FontWeight.w600,
+                          color: context.colors.teal,
+                        ),
+                      ),
                     ],
                   ),
                   SliderTheme(
@@ -149,8 +178,8 @@ class SettingsPage extends ConsumerWidget {
                       max: 100,
                       divisions: 19,
                       label: Fa.digits(settings.dailyGoal),
-                      onChanged: (v) => _save(
-                          ref, settings.copyWith(dailyGoal: v.round())),
+                      onChanged: (v) =>
+                          _save(ref, settings.copyWith(dailyGoal: v.round())),
                     ),
                   ),
                 ],
@@ -163,12 +192,20 @@ class SettingsPage extends ConsumerWidget {
               child: SwitchListTile(
                 contentPadding: EdgeInsets.zero,
                 activeThumbColor: context.colors.accent,
-                title: Text('حالت تایپ جواب',
-                    style: TextStyle(
-                        fontSize: 15, color: context.colors.textPrimary)),
-                subtitle: Text('به‌جای فلیپ کارت، جواب رو تایپ کن و خودکار چک شه',
-                    style: TextStyle(
-                        fontSize: 12, color: context.colors.textMuted)),
+                title: Text(
+                  'حالت تایپ جواب',
+                  style: TextStyle(
+                    fontSize: 15,
+                    color: context.colors.textPrimary,
+                  ),
+                ),
+                subtitle: Text(
+                  'به‌جای فلیپ کارت، جواب رو تایپ کن و خودکار چک شه',
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: context.colors.textMuted,
+                  ),
+                ),
                 value: settings.typedAnswerMode,
                 onChanged: (v) =>
                     _save(ref, settings.copyWith(typedAnswerMode: v)),
@@ -183,12 +220,20 @@ class SettingsPage extends ConsumerWidget {
                   SwitchListTile(
                     contentPadding: EdgeInsets.zero,
                     activeThumbColor: context.colors.accent,
-                    title: Text('افکت صوتی',
-                        style: TextStyle(
-                            fontSize: 15, color: context.colors.textPrimary)),
-                    subtitle: Text('صدای فلیپ، ارزیابی و جشن‌ها',
-                        style: TextStyle(
-                            fontSize: 12, color: context.colors.textMuted)),
+                    title: Text(
+                      'افکت صوتی',
+                      style: TextStyle(
+                        fontSize: 15,
+                        color: context.colors.textPrimary,
+                      ),
+                    ),
+                    subtitle: Text(
+                      'صدای فلیپ، ارزیابی و جشن‌ها',
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: context.colors.textMuted,
+                      ),
+                    ),
                     value: settings.soundEnabled,
                     onChanged: (v) {
                       SoundService.instance.enabled = v;
@@ -199,12 +244,20 @@ class SettingsPage extends ConsumerWidget {
                   SwitchListTile(
                     contentPadding: EdgeInsets.zero,
                     activeThumbColor: context.colors.accent,
-                    title: Text('لرزش (هپتیک)',
-                        style: TextStyle(
-                            fontSize: 15, color: context.colors.textPrimary)),
-                    subtitle: Text('لرزش دستگاه هنگام ارزیابی و فلیپ',
-                        style: TextStyle(
-                            fontSize: 12, color: context.colors.textMuted)),
+                    title: Text(
+                      'لرزش (هپتیک)',
+                      style: TextStyle(
+                        fontSize: 15,
+                        color: context.colors.textPrimary,
+                      ),
+                    ),
+                    subtitle: Text(
+                      'لرزش دستگاه هنگام ارزیابی و فلیپ',
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: context.colors.textMuted,
+                      ),
+                    ),
                     value: settings.hapticsEnabled,
                     onChanged: (v) =>
                         _save(ref, settings.copyWith(hapticsEnabled: v)),
@@ -219,16 +272,28 @@ class SettingsPage extends ConsumerWidget {
               child: ListTile(
                 contentPadding: EdgeInsets.zero,
                 onTap: () => context.push('/data'),
-                leading: Icon(Icons.cloud_upload_outlined,
-                    color: context.colors.accent),
-                title: Text('مدیریت داده',
-                    style: TextStyle(
-                        fontSize: 15, color: context.colors.textPrimary)),
-                subtitle: Text('پشتیبان‌گیری، بازیابی و حذف داده‌ها',
-                    style: TextStyle(
-                        fontSize: 12, color: context.colors.textMuted)),
-                trailing: Icon(Icons.chevron_left_rounded,
-                    color: context.colors.textMuted),
+                leading: Icon(
+                  Icons.cloud_upload_outlined,
+                  color: context.colors.accent,
+                ),
+                title: Text(
+                  'مدیریت داده',
+                  style: TextStyle(
+                    fontSize: 15,
+                    color: context.colors.textPrimary,
+                  ),
+                ),
+                subtitle: Text(
+                  'پشتیبان‌گیری، بازیابی و حذف داده‌ها',
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: context.colors.textMuted,
+                  ),
+                ),
+                trailing: Icon(
+                  Icons.chevron_left_rounded,
+                  color: context.colors.textMuted,
+                ),
               ),
             ),
             const SizedBox(height: 24),
@@ -242,11 +307,17 @@ class SettingsPage extends ConsumerWidget {
                   child: SegmentedButton<AppThemeMode>(
                     segments: const [
                       ButtonSegment(
-                          value: AppThemeMode.system, label: Text('سیستم')),
+                        value: AppThemeMode.system,
+                        label: Text('سیستم'),
+                      ),
                       ButtonSegment(
-                          value: AppThemeMode.light, label: Text('روشن')),
+                        value: AppThemeMode.light,
+                        label: Text('روشن'),
+                      ),
                       ButtonSegment(
-                          value: AppThemeMode.dark, label: Text('تاریک')),
+                        value: AppThemeMode.dark,
+                        label: Text('تاریک'),
+                      ),
                     ],
                     selected: {settings.themeMode},
                     showSelectedIcon: false,
@@ -268,8 +339,10 @@ class _SectionLabel extends StatelessWidget {
   final String text;
   @override
   Widget build(BuildContext context) {
-    return Text(text,
-        style: TextStyle(fontSize: 12, color: context.colors.textMuted));
+    return Text(
+      text,
+      style: TextStyle(fontSize: 12, color: context.colors.textMuted),
+    );
   }
 }
 
@@ -283,8 +356,6 @@ class _PremiumCard extends ConsumerStatefulWidget {
 }
 
 class _PremiumCardState extends ConsumerState<_PremiumCard> {
-  bool _restoring = false;
-
   @override
   Widget build(BuildContext context) {
     final isPro = widget.settings.isPro;
@@ -305,9 +376,10 @@ class _PremiumCardState extends ConsumerState<_PremiumCard> {
         color: isPro ? context.colors.bg2 : null,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
-            color: isPro
-                ? context.colors.teal.withValues(alpha: 0.3)
-                : Colors.amber.withValues(alpha: 0.3)),
+          color: isPro
+              ? context.colors.teal.withValues(alpha: 0.3)
+              : Colors.amber.withValues(alpha: 0.3),
+        ),
       ),
       child: isPro ? _buildProActive(context) : _buildUpgrade(context),
     );
@@ -319,22 +391,32 @@ class _PremiumCardState extends ConsumerState<_PremiumCard> {
 
     return Row(
       children: [
-        const Icon(Icons.workspace_premium_rounded,
-            color: Colors.amber, size: 32),
+        const Icon(
+          Icons.workspace_premium_rounded,
+          color: Colors.amber,
+          size: 32,
+        ),
         const SizedBox(width: 12),
         Expanded(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text('نسخه حرفه‌ای فعال است',
-                  style: TextStyle(
-                      fontSize: 15,
-                      fontWeight: FontWeight.w600,
-                      color: context.colors.textPrimary)),
+              Text(
+                'نسخه حرفه‌ای فعال است',
+                style: TextStyle(
+                  fontSize: 15,
+                  fontWeight: FontWeight.w600,
+                  color: context.colors.textPrimary,
+                ),
+              ),
               if (dateStr.isNotEmpty)
-                Text('از $dateStr',
-                    style: TextStyle(
-                        fontSize: 12, color: context.colors.textMuted)),
+                Text(
+                  'از $dateStr',
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: context.colors.textMuted,
+                  ),
+                ),
             ],
           ),
         ),
@@ -349,15 +431,21 @@ class _PremiumCardState extends ConsumerState<_PremiumCard> {
       children: [
         Row(
           children: [
-            const Icon(Icons.workspace_premium_rounded,
-                color: Colors.amber, size: 28),
+            const Icon(
+              Icons.workspace_premium_rounded,
+              color: Colors.amber,
+              size: 28,
+            ),
             const SizedBox(width: 10),
             Expanded(
-              child: Text('یادیار پرو',
-                  style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w700,
-                      color: context.colors.textPrimary)),
+              child: Text(
+                'یادیار پرو',
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w700,
+                  color: context.colors.textPrimary,
+                ),
+              ),
             ),
           ],
         ),
@@ -365,9 +453,10 @@ class _PremiumCardState extends ConsumerState<_PremiumCard> {
         Text(
           'محدودیت‌ها را بردارید: دسته‌بندی، کتاب و دک نامحدود، تا ۵۰ کارت به ازای هر دک.',
           style: TextStyle(
-              fontSize: 12,
-              color: context.colors.textSecondary,
-              height: 1.5),
+            fontSize: 12,
+            color: context.colors.textSecondary,
+            height: 1.5,
+          ),
         ),
         const SizedBox(height: 14),
         FilledButton.icon(
@@ -379,58 +468,18 @@ class _PremiumCardState extends ConsumerState<_PremiumCard> {
             foregroundColor: Colors.black87,
             padding: const EdgeInsets.symmetric(vertical: 12),
             shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12)),
+              borderRadius: BorderRadius.circular(12),
+            ),
           ),
         ),
         const SizedBox(height: 8),
-        TextButton.icon(
-          onPressed: _restoring ? null : _restorePurchase,
-          icon: _restoring
-              ? const SizedBox(
-                  width: 16,
-                  height: 16,
-                  child: CircularProgressIndicator(strokeWidth: 2))
-              : const Icon(Icons.restore_rounded, size: 18),
-          label: Text(_restoring ? 'در حال بازیابی...' : 'بازیابی خرید',
-              style: const TextStyle(fontSize: 13)),
-          style: TextButton.styleFrom(
-            foregroundColor: context.colors.textSecondary,
-          ),
+        Text(
+          'پرداخت و بازیابی خرید پس از اتصال امن به فروشگاه فعال می‌شوند.',
+          textAlign: TextAlign.center,
+          style: TextStyle(fontSize: 11, color: context.colors.textMuted),
         ),
       ],
     );
-  }
-
-  Future<void> _restorePurchase() async {
-    setState(() => _restoring = true);
-    try {
-      final ok = await PurchaseService.instance.restorePurchase();
-      if (ok && mounted) {
-        final repo = ref.read(settingsRepositoryProvider);
-        final current = ref.read(settingsProvider);
-        await repo.save(current.copyWith(
-          isPro: true,
-          proActivatedAt: DateTime.now(),
-        ));
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('خرید شما با موفقیت بازیابی شد ✅')),
-          );
-        }
-      } else if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('خریدی برای بازیابی یافت نشد.')),
-        );
-      }
-    } catch (_) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('خطا در بازیابی خرید.')),
-        );
-      }
-    } finally {
-      if (mounted) setState(() => _restoring = false);
-    }
   }
 }
 

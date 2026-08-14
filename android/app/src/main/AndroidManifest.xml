@@ -2,9 +2,7 @@
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED"/>
     <uses-permission android:name="android.permission.VIBRATE"/>
-    <!-- یادآوری دقیق سرِ ساعت (Android 12+). USE_EXACT_ALARM برای اپ‌های یادآور مجاز است. -->
-    <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM"/>
-    <uses-permission android:name="android.permission.USE_EXACT_ALARM"/>
+
     <application
         android:label="یادیار"
         android:name="${applicationName}"

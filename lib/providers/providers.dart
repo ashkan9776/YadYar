@@ -17,7 +17,6 @@ import '../domain/activity.dart';
 import '../domain/gamification.dart';
 import '../domain/study_stats.dart';
 import '../domain/weak_cards.dart';
-import '../core/home_widget_service.dart';
 
 /// نمونه‌ی دیتابیس — در main هنگام راه‌اندازی override می‌شود.
 final databaseProvider = Provider<AppDatabase>(
@@ -55,8 +54,7 @@ final settingsStreamProvider = StreamProvider<AppSettings>(
 
 /// تنظیمات جاری (یا پیش‌فرض تا وقتی جریان بارگذاری شود).
 final settingsProvider = Provider<AppSettings>(
-  (ref) =>
-      ref.watch(settingsStreamProvider).value ?? AppSettings.defaults,
+  (ref) => ref.watch(settingsStreamProvider).value ?? AppSettings.defaults,
 );
 
 /// ── دسته‌بندی‌ها ─────────────────────────────────────────────────
@@ -74,8 +72,10 @@ final booksStreamProvider = StreamProvider<List<Book>>(
 );
 
 /// جریان زنده‌ی کتاب‌های یک دسته‌بندی.
-final categoryBooksProvider =
-    StreamProvider.family<List<Book>, int>((ref, categoryId) {
+final categoryBooksProvider = StreamProvider.family<List<Book>, int>((
+  ref,
+  categoryId,
+) {
   return ref.watch(bookRepositoryProvider).watchByCategory(categoryId);
 });
 
@@ -87,8 +87,7 @@ final decksStreamProvider = StreamProvider<List<Deck>>(
 );
 
 /// جریان زنده‌ی دک‌های یک کتاب.
-final bookDecksProvider =
-    StreamProvider.family<List<Deck>, int>((ref, bookId) {
+final bookDecksProvider = StreamProvider.family<List<Deck>, int>((ref, bookId) {
   return ref.watch(deckRepositoryProvider).watchByBook(bookId);
 });
 
@@ -105,8 +104,10 @@ final reviewLogsStreamProvider = StreamProvider<List<ReviewLog>>(
 );
 
 /// جریان زنده‌ی کارت‌های یک دک مشخص.
-final deckCardsProvider =
-    StreamProvider.family<List<FlashCard>, int>((ref, deckId) {
+final deckCardsProvider = StreamProvider.family<List<FlashCard>, int>((
+  ref,
+  deckId,
+) {
   return ref.watch(cardRepositoryProvider).watchByDeck(deckId);
 });
 
@@ -146,9 +147,10 @@ final totalDueProvider = Provider<int>((ref) {
 final bookCardCountsProvider = Provider<Map<int, int>>((ref) {
   final cards = ref.watch(allCardsStreamProvider).value ?? const [];
   final decks = ref.watch(decksStreamProvider).value ?? const [];
+  final decksById = {for (final deck in decks) deck.id: deck};
   final map = <int, int>{};
   for (final c in cards) {
-    final deck = decks.where((d) => d.id == c.deckId).firstOrNull;
+    final deck = decksById[c.deckId];
     if (deck != null) {
       map[deck.bookId] = (map[deck.bookId] ?? 0) + 1;
     }
@@ -160,11 +162,12 @@ final bookCardCountsProvider = Provider<Map<int, int>>((ref) {
 final bookDueCountsProvider = Provider<Map<int, int>>((ref) {
   final cards = ref.watch(allCardsStreamProvider).value ?? const [];
   final decks = ref.watch(decksStreamProvider).value ?? const [];
+  final decksById = {for (final deck in decks) deck.id: deck};
   final now = DateTime.now();
   final map = <int, int>{};
   for (final c in cards) {
     if (c.isDueAt(now)) {
-      final deck = decks.where((d) => d.id == c.deckId).firstOrNull;
+      final deck = decksById[c.deckId];
       if (deck != null) {
         map[deck.bookId] = (map[deck.bookId] ?? 0) + 1;
       }
@@ -178,14 +181,14 @@ final categoryCardCountsProvider = Provider<Map<int, int>>((ref) {
   final cards = ref.watch(allCardsStreamProvider).value ?? const [];
   final decks = ref.watch(decksStreamProvider).value ?? const [];
   final books = ref.watch(booksStreamProvider).value ?? const [];
+  final decksById = {for (final deck in decks) deck.id: deck};
+  final booksById = {for (final book in books) book.id: book};
   final map = <int, int>{};
   for (final c in cards) {
-    final deck = decks.where((d) => d.id == c.deckId).firstOrNull;
-    if (deck != null) {
-      final book = books.where((b) => b.id == deck.bookId).firstOrNull;
-      if (book != null) {
-        map[book.categoryId] = (map[book.categoryId] ?? 0) + 1;
-      }
+    final deck = decksById[c.deckId];
+    final book = deck == null ? null : booksById[deck.bookId];
+    if (book != null) {
+      map[book.categoryId] = (map[book.categoryId] ?? 0) + 1;
     }
   }
   return map;
@@ -196,26 +199,20 @@ final categoryDueCountsProvider = Provider<Map<int, int>>((ref) {
   final cards = ref.watch(allCardsStreamProvider).value ?? const [];
   final decks = ref.watch(decksStreamProvider).value ?? const [];
   final books = ref.watch(booksStreamProvider).value ?? const [];
+  final decksById = {for (final deck in decks) deck.id: deck};
+  final booksById = {for (final book in books) book.id: book};
   final now = DateTime.now();
   final map = <int, int>{};
   for (final c in cards) {
     if (c.isDueAt(now)) {
-      final deck = decks.where((d) => d.id == c.deckId).firstOrNull;
-      if (deck != null) {
-        final book = books.where((b) => b.id == deck.bookId).firstOrNull;
-        if (book != null) {
-          map[book.categoryId] = (map[book.categoryId] ?? 0) + 1;
-        }
+      final deck = decksById[c.deckId];
+      final book = deck == null ? null : booksById[deck.bookId];
+      if (book != null) {
+        map[book.categoryId] = (map[book.categoryId] ?? 0) + 1;
       }
     }
   }
   return map;
-});
-
-/// هماهنگی تعداد سررسیدها با ویجت صفحه‌ی خانه — side-effect provider.
-final homeWidgetSyncProvider = Provider<void>((ref) {
-  final due = ref.watch(totalDueProvider);
-  HomeWidgetService.updateDueCount(due);
 });
 
 /// ── آمار و گیمیفیکیشن ────────────────────────────────────────────

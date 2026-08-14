@@ -19,6 +19,10 @@ import '../features/stats/stats_page.dart';
 
 final _rootKey = GlobalKey<NavigatorState>();
 
+/// شناسه‌ی مسیرهای عمیق را بدون پرتاب exception می‌خواند.
+int _pathId(GoRouterState state, String name) =>
+    int.tryParse(state.pathParameters[name] ?? '') ?? -1;
+
 /// مسیریاب اصلی اپ با نوار ناوبری پایین (خانه / دسته‌بندی‌ها / آمار).
 final appRouter = GoRouter(
   navigatorKey: _rootKey,
@@ -32,12 +36,13 @@ final appRouter = GoRouter(
         ),
         StatefulShellBranch(
           routes: [
-            GoRoute(
-                path: '/decks', builder: (_, _) => const CategoriesPage()),
+            GoRoute(path: '/decks', builder: (_, _) => const CategoriesPage()),
           ],
         ),
         StatefulShellBranch(
-          routes: [GoRoute(path: '/stats', builder: (_, _) => const StatsPage())],
+          routes: [
+            GoRoute(path: '/stats', builder: (_, _) => const StatsPage()),
+          ],
         ),
       ],
     ),
@@ -46,20 +51,12 @@ final appRouter = GoRouter(
     GoRoute(
       path: '/review/:deckId',
       parentNavigatorKey: _rootKey,
-      builder: (_, state) {
-        final raw = state.pathParameters['deckId']!;
-        final deckId = int.tryParse(raw) ?? -1;
-        return ReviewPage(deckId: deckId);
-      },
+      builder: (_, state) => ReviewPage(deckId: _pathId(state, 'deckId')),
     ),
     GoRoute(
       path: '/quiz/:deckId',
       parentNavigatorKey: _rootKey,
-      builder: (_, state) {
-        final raw = state.pathParameters['deckId']!;
-        final deckId = int.tryParse(raw) ?? -1;
-        return QuizPage(deckId: deckId);
-      },
+      builder: (_, state) => QuizPage(deckId: _pathId(state, 'deckId')),
     ),
 
     // ── تنظیمات / داده / جستجو ───────────────────────────────────
@@ -88,54 +85,47 @@ final appRouter = GoRouter(
     GoRoute(
       path: '/category/:id',
       parentNavigatorKey: _rootKey,
-      builder: (_, state) => CategoryDetailPage(
-          categoryId: int.parse(state.pathParameters['id']!)),
+      builder: (_, state) =>
+          CategoryDetailPage(categoryId: _pathId(state, 'id')),
     ),
     GoRoute(
       path: '/category/:id/edit',
       parentNavigatorKey: _rootKey,
-      builder: (_, state) => CategoryEditPage(
-          categoryId: int.parse(state.pathParameters['id']!)),
+      builder: (_, state) => CategoryEditPage(categoryId: _pathId(state, 'id')),
     ),
     GoRoute(
       path: '/category/:id/book-new',
       parentNavigatorKey: _rootKey,
-      builder: (_, state) => BookEditPage(
-          categoryId: int.parse(state.pathParameters['id']!)),
+      builder: (_, state) => BookEditPage(categoryId: _pathId(state, 'id')),
     ),
 
     // ── کتاب‌ها ────────────────────────────────────────────────────
     GoRoute(
       path: '/book/:id',
       parentNavigatorKey: _rootKey,
-      builder: (_, state) =>
-          BookDetailPage(bookId: int.parse(state.pathParameters['id']!)),
+      builder: (_, state) => BookDetailPage(bookId: _pathId(state, 'id')),
     ),
     GoRoute(
       path: '/book/:id/edit',
       parentNavigatorKey: _rootKey,
-      builder: (_, state) =>
-          BookEditPage(bookId: int.parse(state.pathParameters['id']!)),
+      builder: (_, state) => BookEditPage(bookId: _pathId(state, 'id')),
     ),
     GoRoute(
       path: '/book/:id/deck-new',
       parentNavigatorKey: _rootKey,
-      builder: (_, state) =>
-          DeckEditPage(bookId: int.parse(state.pathParameters['id']!)),
+      builder: (_, state) => DeckEditPage(bookId: _pathId(state, 'id')),
     ),
 
     // ── دک‌ها (جزئیات / ویرایش) ────────────────────────────────────
     GoRoute(
       path: '/deck/:id',
       parentNavigatorKey: _rootKey,
-      builder: (_, state) =>
-          DeckDetailPage(deckId: int.parse(state.pathParameters['id']!)),
+      builder: (_, state) => DeckDetailPage(deckId: _pathId(state, 'id')),
     ),
     GoRoute(
       path: '/deck/:id/edit',
       parentNavigatorKey: _rootKey,
-      builder: (_, state) =>
-          DeckEditPage(deckId: int.parse(state.pathParameters['id']!)),
+      builder: (_, state) => DeckEditPage(deckId: _pathId(state, 'id')),
     ),
   ],
 );

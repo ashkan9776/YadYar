@@ -97,6 +97,29 @@ flutter build appbundle --release
 
 <div dir="rtl">
 
+### امضای نسخهٔ انتشار
+
+پیش از ساخت release، یک keystore خصوصی بساز و فایل `android/key.properties` را
+(که در Git نادیده گرفته می‌شود) با این مقادیر ایجاد کن:
+
+</div>
+
+```properties
+storeFile=/مسیر/امن/yadyar-release.jks
+storePassword=...
+keyAlias=yadyar
+keyPassword=...
+```
+
+<div dir="rtl">
+
+بدون این فایل، build انتشار عمداً متوقف می‌شود؛ هرگز keystore یا گذرواژه‌ها را
+commit نکن.
+
+</div>
+
+<div dir="rtl">
+
 ## 🗂 ساختار پروژه
 
 </div>

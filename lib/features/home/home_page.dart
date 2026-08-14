@@ -1,8 +1,11 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../core/celebrations/celebration_overlay.dart';
+import '../../core/home_widget_service.dart';
 import '../../core/persian.dart';
 import '../../core/theme/app_colors.dart';
 import '../../domain/gamification.dart';
@@ -23,14 +26,27 @@ class _HomePageState extends ConsumerState<HomePage> {
   int _lastSeenLevel = -1;
 
   @override
+  void initState() {
+    super.initState();
+    // بروزرسانی اولیه ویجت در اولین فریم
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        unawaited(HomeWidgetService.updateDueCount(ref.read(totalDueProvider)));
+      }
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
+    ref.listen<int>(
+      totalDueProvider,
+      (_, dueCount) => unawaited(HomeWidgetService.updateDueCount(dueCount)),
+    );
     final due = ref.watch(totalDueProvider);
     final stats = ref.watch(statsProvider);
     final goal = ref.watch(settingsProvider).dailyGoal;
     final weakCount = ref.watch(weakCardsProvider).length;
     final level = ref.watch(levelProvider);
-    // همگام‌سازی ویجت صفحه‌ی خانه با تعداد سررسیدها.
-    ref.watch(homeWidgetSyncProvider);
 
     // بررسی لول‌آپ: فقط وقتی سطح جدیدی کشف شود (نه اولین بار).
     if (_lastSeenLevel >= 1 && level.level > _lastSeenLevel) {
@@ -71,7 +87,8 @@ class _HomePageState extends ConsumerState<HomePage> {
                 const SizedBox(width: 12),
                 Expanded(
                   child: _StatTile(
-                    value: '${Fa.digits((stats.weeklyAccuracy * 100).round())}٪',
+                    value:
+                        '${Fa.digits((stats.weeklyAccuracy * 100).round())}٪',
                     label: 'دقت این هفته',
                     color: context.colors.teal,
                   ),
@@ -144,7 +161,10 @@ class _Header extends StatelessWidget {
                   ),
                   IconButton(
                     onPressed: () => context.push('/settings'),
-                    icon: const Icon(Icons.settings_outlined, color: Colors.white),
+                    icon: const Icon(
+                      Icons.settings_outlined,
+                      color: Colors.white,
+                    ),
                     tooltip: 'تنظیمات',
                     visualDensity: VisualDensity.compact,
                   ),
@@ -153,13 +173,21 @@ class _Header extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 6),
-          Text(_greeting,
-              style: TextStyle(
-                  fontSize: 13, color: Colors.white.withValues(alpha: 0.85))),
+          Text(
+            _greeting,
+            style: TextStyle(
+              fontSize: 13,
+              color: Colors.white.withValues(alpha: 0.85),
+            ),
+          ),
           const SizedBox(height: 2),
-          Text(sub,
-              style: TextStyle(
-                  fontSize: 13, color: Colors.white.withValues(alpha: 0.7))),
+          Text(
+            sub,
+            style: TextStyle(
+              fontSize: 13,
+              color: Colors.white.withValues(alpha: 0.7),
+            ),
+          ),
           const SizedBox(height: 16),
           _LevelBar(level: level),
         ],
@@ -183,19 +211,29 @@ class _LevelBar extends StatelessWidget {
           children: [
             Row(
               children: [
-                const Icon(Icons.military_tech_rounded,
-                    color: Colors.white, size: 18),
+                const Icon(
+                  Icons.military_tech_rounded,
+                  color: Colors.white,
+                  size: 18,
+                ),
                 const SizedBox(width: 4),
-                Text('سطح ${Fa.digits(level.level)}',
-                    style: const TextStyle(
-                        fontSize: 13,
-                        fontWeight: FontWeight.w700,
-                        color: Colors.white)),
+                Text(
+                  'سطح ${Fa.digits(level.level)}',
+                  style: const TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w700,
+                    color: Colors.white,
+                  ),
+                ),
               ],
             ),
-            Text('${Fa.digits(level.xpIntoLevel)} / ${Fa.digits(level.xpForNext)} XP',
-                style: TextStyle(
-                    fontSize: 11, color: Colors.white.withValues(alpha: 0.8))),
+            Text(
+              '${Fa.digits(level.xpIntoLevel)} / ${Fa.digits(level.xpForNext)} XP',
+              style: TextStyle(
+                fontSize: 11,
+                color: Colors.white.withValues(alpha: 0.8),
+              ),
+            ),
           ],
         ),
         const SizedBox(height: 8),
@@ -203,8 +241,7 @@ class _LevelBar extends StatelessWidget {
           borderRadius: BorderRadius.circular(6),
           child: Stack(
             children: [
-              Container(
-                  height: 8, color: Colors.white.withValues(alpha: 0.25)),
+              Container(height: 8, color: Colors.white.withValues(alpha: 0.25)),
               TweenAnimationBuilder<double>(
                 tween: Tween(begin: 0, end: level.progress),
                 duration: const Duration(milliseconds: 700),
@@ -227,8 +264,10 @@ class _SectionLabel extends StatelessWidget {
   final String text;
   @override
   Widget build(BuildContext context) {
-    return Text(text,
-        style: TextStyle(fontSize: 12, color: context.colors.textMuted));
+    return Text(
+      text,
+      style: TextStyle(fontSize: 12, color: context.colors.textMuted),
+    );
   }
 }
 
@@ -256,14 +295,21 @@ class _DailyGoalCard extends StatelessWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(reached ? 'به هدف امروز رسیدی 🎯' : 'هدف امروز',
-                  style: TextStyle(
-                      fontSize: 13, color: context.colors.textSecondary)),
-              Text('${Fa.digits(done)} از ${Fa.digits(goal)}',
-                  style: TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w700,
-                      color: color)),
+              Text(
+                reached ? 'به هدف امروز رسیدی 🎯' : 'هدف امروز',
+                style: TextStyle(
+                  fontSize: 13,
+                  color: context.colors.textSecondary,
+                ),
+              ),
+              Text(
+                '${Fa.digits(done)} از ${Fa.digits(goal)}',
+                style: TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w700,
+                  color: color,
+                ),
+              ),
             ],
           ),
           const SizedBox(height: 12),
@@ -298,9 +344,7 @@ class _StreakRow extends StatelessWidget {
   Widget build(BuildContext context) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        for (final d in days) _StreakDot(d),
-      ],
+      children: [for (final d in days) _StreakDot(d)],
     );
   }
 }
@@ -330,9 +374,10 @@ class _StreakDot extends StatelessWidget {
       height: 36,
       decoration: BoxDecoration(color: bg, shape: BoxShape.circle),
       alignment: Alignment.center,
-      child: Text(day.label,
-          style: TextStyle(
-              fontSize: 13, fontWeight: FontWeight.w600, color: fg)),
+      child: Text(
+        day.label,
+        style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: fg),
+      ),
     );
   }
 }
@@ -347,9 +392,7 @@ class _StartReviewButton extends StatelessWidget {
     return SizedBox(
       width: double.infinity,
       child: ElevatedButton(
-        onPressed: enabled
-            ? () => context.push('/review/$kAllDecks')
-            : null,
+        onPressed: enabled ? () => context.push('/review/$kAllDecks') : null,
         style: ElevatedButton.styleFrom(
           backgroundColor: context.colors.accent,
           disabledBackgroundColor: context.colors.bg3,
@@ -396,7 +439,10 @@ class _WeakPointsButton extends StatelessWidget {
               child: Text(
                 'تمرین نقاط ضعف — ${Fa.digits(count)} کارت سخت',
                 style: TextStyle(
-                    fontSize: 14, fontWeight: FontWeight.w600, color: c.amber),
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
+                  color: c.amber,
+                ),
               ),
             ),
             Icon(Icons.chevron_left_rounded, color: c.amber),
@@ -408,8 +454,11 @@ class _WeakPointsButton extends StatelessWidget {
 }
 
 class _StatTile extends StatelessWidget {
-  const _StatTile(
-      {required this.value, required this.label, required this.color});
+  const _StatTile({
+    required this.value,
+    required this.label,
+    required this.color,
+  });
   final String value;
   final String label;
   final Color color;
@@ -425,13 +474,19 @@ class _StatTile extends StatelessWidget {
       ),
       child: Column(
         children: [
-          Text(value,
-              style: TextStyle(
-                  fontSize: 26, fontWeight: FontWeight.w700, color: color)),
+          Text(
+            value,
+            style: TextStyle(
+              fontSize: 26,
+              fontWeight: FontWeight.w700,
+              color: color,
+            ),
+          ),
           const SizedBox(height: 4),
-          Text(label,
-              style:
-                  TextStyle(fontSize: 11, color: context.colors.textMuted)),
+          Text(
+            label,
+            style: TextStyle(fontSize: 11, color: context.colors.textMuted),
+          ),
         ],
       ),
     );

@@ -4,7 +4,7 @@ enum AppThemeMode { system, light, dark }
 /// تنظیمات کاربر — یادآوری روزانه، هدف مطالعه، تم، صدا، لرزش و وضعیت پرو.
 class AppSettings {
   const AppSettings({
-    this.reminderEnabled = true,
+    this.reminderEnabled = false,
     this.reminderHour = 20,
     this.reminderMinute = 0,
     this.dailyGoal = 20,
@@ -73,33 +73,33 @@ class AppSettings {
   }
 
   Map<String, Object?> toMap() => {
-        'reminderEnabled': reminderEnabled,
-        'reminderHour': reminderHour,
-        'reminderMinute': reminderMinute,
-        'dailyGoal': dailyGoal,
-        'themeMode': themeMode.name,
-        'typedAnswerMode': typedAnswerMode,
-        'soundEnabled': soundEnabled,
-        'hapticsEnabled': hapticsEnabled,
-        'isPro': isPro,
-        'proActivatedAt': proActivatedAt?.toIso8601String(),
-      };
+    'reminderEnabled': reminderEnabled,
+    'reminderHour': reminderHour,
+    'reminderMinute': reminderMinute,
+    'dailyGoal': dailyGoal,
+    'themeMode': themeMode.name,
+    'typedAnswerMode': typedAnswerMode,
+    'soundEnabled': soundEnabled,
+    'hapticsEnabled': hapticsEnabled,
+    'isPro': isPro,
+    'proActivatedAt': proActivatedAt?.toIso8601String(),
+  };
 
   factory AppSettings.fromMap(Map<String, Object?> map) => AppSettings(
-        reminderEnabled: (map['reminderEnabled'] as bool?) ?? true,
-        reminderHour: (map['reminderHour'] as int?) ?? 20,
-        reminderMinute: (map['reminderMinute'] as int?) ?? 0,
-        dailyGoal: (map['dailyGoal'] as int?) ?? 20,
-        themeMode: AppThemeMode.values.firstWhere(
-          (m) => m.name == map['themeMode'],
-          orElse: () => AppThemeMode.dark,
-        ),
-        typedAnswerMode: (map['typedAnswerMode'] as bool?) ?? false,
-        soundEnabled: (map['soundEnabled'] as bool?) ?? true,
-        hapticsEnabled: (map['hapticsEnabled'] as bool?) ?? true,
-        isPro: (map['isPro'] as bool?) ?? false,
-        proActivatedAt: map['proActivatedAt'] != null
-            ? DateTime.tryParse(map['proActivatedAt'] as String)
-            : null,
-      );
+    reminderEnabled: (map['reminderEnabled'] as bool?) ?? false,
+    reminderHour: (map['reminderHour'] as int?) ?? 20,
+    reminderMinute: (map['reminderMinute'] as int?) ?? 0,
+    dailyGoal: (map['dailyGoal'] as int?) ?? 20,
+    themeMode: AppThemeMode.values.firstWhere(
+      (m) => m.name == map['themeMode'],
+      orElse: () => AppThemeMode.dark,
+    ),
+    typedAnswerMode: (map['typedAnswerMode'] as bool?) ?? false,
+    soundEnabled: (map['soundEnabled'] as bool?) ?? true,
+    hapticsEnabled: (map['hapticsEnabled'] as bool?) ?? true,
+    isPro: (map['isPro'] as bool?) ?? false,
+    proActivatedAt: map['proActivatedAt'] != null
+        ? DateTime.tryParse(map['proActivatedAt'] as String)
+        : null,
+  );
 }

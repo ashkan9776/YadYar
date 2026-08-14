@@ -12,26 +12,29 @@ class BackupService {
 
   final AppDatabase _db;
 
-  /// ساخت عکس‌فوری از کل دیتابیس.
-  Future<AppSnapshot> exportSnapshot() async {
-    final categories = await AppDatabase.categories.find(_db.db);
-    final books = await AppDatabase.books.find(_db.db);
-    final decks = await AppDatabase.decks.find(_db.db);
-    final cards = await AppDatabase.cards.find(_db.db);
-    final reviews = await AppDatabase.reviews.find(_db.db);
-    final settingsRec =
-        await AppDatabase.settings.record('app').get(_db.db);
+  static const _maximumBackupSize = 50 * 1024 * 1024;
 
-    return AppSnapshot(
-      version: AppSnapshot.currentVersion,
-      exportedAt: DateTime.now().millisecondsSinceEpoch,
-      categories: categories.map((r) => r.value).toList(),
-      books: books.map((r) => r.value).toList(),
-      decks: decks.map((r) => r.value).toList(),
-      cards: cards.map((r) => r.value).toList(),
-      reviews: reviews.map((r) => r.value).toList(),
-      settings: settingsRec,
-    );
+  /// ساخت عکس‌فوری سازگار از کل دیتابیس.
+  Future<AppSnapshot> exportSnapshot() {
+    return _db.db.transaction((txn) async {
+      final categories = await AppDatabase.categories.find(txn);
+      final books = await AppDatabase.books.find(txn);
+      final decks = await AppDatabase.decks.find(txn);
+      final cards = await AppDatabase.cards.find(txn);
+      final reviews = await AppDatabase.reviews.find(txn);
+      final settingsRec = await AppDatabase.settings.record('app').get(txn);
+
+      return AppSnapshot(
+        version: AppSnapshot.currentVersion,
+        exportedAt: DateTime.now().millisecondsSinceEpoch,
+        categories: categories.map(_recordWithId).toList(),
+        books: books.map(_recordWithId).toList(),
+        decks: decks.map(_recordWithId).toList(),
+        cards: cards.map(_recordWithId).toList(),
+        reviews: reviews.map(_recordWithId).toList(),
+        settings: settingsRec,
+      );
+    });
   }
 
   /// ذخیره‌ی عکس‌فوری در فایل موقت و بازگرداندن مسیر آن.
@@ -39,13 +42,16 @@ class BackupService {
     final dir = await getTemporaryDirectory();
     final now = DateTime.now();
     final fileName = 'yadyar_backup_${now.millisecondsSinceEpoch}.json';
-    final file = File('${dir.path}/$fileName');
-    await file.writeAsString(snapshot.toJson());
+    final file = File('${dir.path}${Platform.pathSeparator}$fileName');
+    await file.writeAsString(snapshot.toJson(), flush: true);
     return file.path;
   }
 
   /// بارگذاری عکس‌فوری و بازنویسی کل دیتابیس (درون یک تراکنش اتمیک).
   Future<void> importSnapshot(AppSnapshot snapshot) async {
+    // This must run before the transaction deletes any existing records.
+    snapshot.validateForImport();
+
     await _db.db.transaction((txn) async {
       // پاک‌سازی کامل.
       await AppDatabase.categories.delete(txn);
@@ -55,41 +61,62 @@ class BackupService {
       await AppDatabase.reviews.delete(txn);
       await AppDatabase.settings.delete(txn);
 
-      // بازسازی دسته‌بندی‌ها (نسخه ۲ به بعد).
-      for (final record in snapshot.categories ?? const []) {
-        await AppDatabase.categories.add(txn, record);
+      // Restore explicit keys, rather than assigning new auto-increment keys.
+      for (final record in snapshot.categories!) {
+        await _putRecordWithId(AppDatabase.categories, txn, record);
       }
-
-      // بازسازی کتاب‌ها (نسخه ۲ به بعد).
-      for (final record in snapshot.books ?? const []) {
-        await AppDatabase.books.add(txn, record);
+      for (final record in snapshot.books!) {
+        await _putRecordWithId(AppDatabase.books, txn, record);
       }
-
-      // بازسازی دک‌ها.
       for (final record in snapshot.decks) {
-        await AppDatabase.decks.add(txn, record);
+        await _putRecordWithId(AppDatabase.decks, txn, record);
       }
-
-      // بازسازی کارت‌ها.
       for (final record in snapshot.cards) {
-        await AppDatabase.cards.add(txn, record);
+        await _putRecordWithId(AppDatabase.cards, txn, record);
       }
-
-      // بازسازی مرورها.
       for (final record in snapshot.reviews) {
-        await AppDatabase.reviews.add(txn, record);
+        await _putRecordWithId(AppDatabase.reviews, txn, record);
       }
 
-      // بازسازی تنظیمات.
       if (snapshot.settings != null) {
         await AppDatabase.settings.record('app').put(txn, snapshot.settings!);
       }
     });
   }
 
-  /// خواندن عکس‌فوری از فایل روی دیسک.
-  static AppSnapshot loadFromFile(String path) {
-    final content = File(path).readAsStringSync();
-    return AppSnapshot.fromJson(content);
+  static Map<String, Object?> _recordWithId(
+    RecordSnapshot<int, Map<String, Object?>> record,
+  ) => {'id': record.key, ...record.value};
+
+  static Future<void> _putRecordWithId(
+    StoreRef<int, Map<String, Object?>> store,
+    DatabaseClient client,
+    Map<String, Object?> record,
+  ) {
+    final id = record['id']! as int;
+    final value = Map<String, Object?>.from(record)..remove('id');
+    return store.record(id).put(client, value);
+  }
+
+  /// خواندن عکس‌فوری از فایل روی دیسک بدون مسدودکردن UI.
+  static Future<AppSnapshot> loadFromFile(String path) async {
+    try {
+      final file = File(path);
+      if (!await file.exists()) {
+        throw const FormatException('مسیر انتخاب‌شده یک فایل پشتیبان نیست.');
+      }
+      final size = await file.length();
+      if (size == 0) {
+        throw const FormatException('فایل پشتیبان خالی است.');
+      }
+      if (size > _maximumBackupSize) {
+        throw const FormatException('حجم فایل پشتیبان بیش از حد مجاز است.');
+      }
+      return AppSnapshot.fromJson(await file.readAsString());
+    } on FormatException {
+      rethrow;
+    } on FileSystemException catch (error) {
+      throw FormatException('خواندن فایل پشتیبان ممکن نشد: ${error.message}');
+    }
   }
 }
