@@ -53,6 +53,11 @@
                 android:resource="@xml/yadyar_widget_info"/>
         </receiver>
 
+        <!-- پرداخت درون‌برنامه‌ای کافه‌بازار: اکتیویتی میزبان جریان خرید -->
+        <activity
+            android:name=".billing.PaymentActivity"
+            android:theme="@android:style/Theme.Translucent.NoTitleBar.Fullscreen"/>
+
         <!-- Don't delete the meta-data below.
              This is used by the Flutter tool to generate GeneratedPluginRegistrant.java -->
         <meta-data
@@ -73,5 +78,7 @@
         <intent>
             <action android:name="android.intent.action.TTS_SERVICE"/>
         </intent>
+        <!-- لازم برای دیده‌شدن اپلیکیشن بازار توسط Poolakey در Android 11+ -->
+        <package android:name="com.farsitel.bazaar"/>
     </queries>
 </manifest>

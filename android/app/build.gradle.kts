@@ -77,4 +77,15 @@ flutter {
 
 dependencies {
     coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.1.4")
+
+    // SDK رسمی پرداخت درون‌برنامه‌ای کافه‌بازار — AAR محلی.
+    // دلیل: jitpack در این شبکه قابل دسترس نیست و مخزن جایگزین گوگل خطای 403
+    // می‌دهد؛ به‌علاوه پلاگین pub آن (flutter_poolakey) به‌خاطر jcenter با
+    // AGP 9 ناسازگار است. پل فلاتر در billing/PoolakeyBridge.kt است.
+    implementation(files("libs/poolakey-2.2.0.aar"))
+    // تنها وابستگی ترانزیتیو پولکی (androidx.fragment) + ComponentActivity
+    // برای PaymentActivity — نسخه‌های موجود در کش گریدل (شبکه به مخازن
+    // گوگل دسترسی ندارد و دانلود مجدد ممکن نیست).
+    implementation("androidx.fragment:fragment:1.8.9")
+    implementation("androidx.activity:activity:1.9.0")
 }

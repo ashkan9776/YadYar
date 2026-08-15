@@ -20,3 +20,10 @@
 
 # هشدارهای بی‌اهمیتِ کلاس‌های اختیاری را نادیده بگیر.
 -dontwarn com.google.errorprone.annotations.**
+
+# SDK پرداخت کافه‌بازار (Poolakey) — از Rx و annotation استفاده می‌کند؛
+# کوچک‌سازی رادیکال می‌تواند callback های DSL را بشکند.
+-keep class ir.cafebazaar.poolakey.** { *; }
+-dontwarn ir.cafebazaar.poolakey.**
+# پل پرداخت یادیار (PaymentActivity از طریق manifest و companion ارجاع می‌شود).
+-keep class com.ahoura.yadyar.billing.** { *; }
