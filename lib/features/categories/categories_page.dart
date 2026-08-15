@@ -145,7 +145,7 @@ class _CategoryCard extends StatelessWidget {
                           color: Colors.white)),
                 ),
               const SizedBox(width: 6),
-              Icon(Icons.chevron_left_rounded,
+              Icon(Icons.chevron_right_rounded,
                   color: context.colors.textMuted),
             ],
           ),

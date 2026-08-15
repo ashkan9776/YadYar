@@ -96,7 +96,10 @@ class _PremiumDialogState extends ConsumerState<_PremiumDialog> {
                   const SizedBox(height: 10),
                   _BenefitRow(Icons.block_rounded, 'بدون تبلیغات'),
                   const SizedBox(height: 10),
-                  _BenefitRow(Icons.star_rounded, 'چالش روزانه و آمار پیشرفته'),
+                  _BenefitRow(
+                    Icons.local_fire_department_rounded,
+                    'چالش روزانه با استریک مخصوص 🔥',
+                  ),
                   const SizedBox(height: 10),
                   _BenefitRow(Icons.mic_rounded, 'تمرین مکالمه (قابلیت آینده)'),
                 ],

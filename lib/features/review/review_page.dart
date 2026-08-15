@@ -8,6 +8,7 @@ import '../../core/tts.dart';
 import '../../core/widgets/confetti_burst.dart';
 import '../../core/widgets/math_text.dart';
 import '../../data/models/rating.dart';
+import '../../domain/daily_challenge.dart';
 import '../../providers/providers.dart';
 import 'review_controller.dart';
 import 'widgets/flip_card.dart';
@@ -36,6 +37,7 @@ class ReviewPage extends ConsumerWidget {
             good: state.good,
             easy: state.easy,
             focusEnded: state.focusEnded,
+            isChallenge: deckId == kDailyChallenge,
           ),
           const Positioned.fill(child: ConfettiBurst()),
         ],
@@ -50,7 +52,7 @@ class ReviewPage extends ConsumerWidget {
       appBar: AppBar(
         title: state.focusActive
             ? _FocusTitle(seconds: state.focusRemainingSeconds)
-            : const Text('مرور'),
+            : Text(deckId == kDailyChallenge ? 'چالش روزانه' : 'مرور'),
         leading: IconButton(
           icon: const Icon(Icons.close_rounded),
           onPressed: () => context.pop(),
@@ -194,7 +196,7 @@ class _FocusDurationTile extends StatelessWidget {
                     color: c.textPrimary),
               ),
             ),
-            Icon(Icons.chevron_left_rounded, color: c.amber),
+            Icon(Icons.chevron_right_rounded, color: c.amber),
           ],
         ),
       ),
@@ -550,11 +552,15 @@ class _SummaryView extends ConsumerWidget {
     required this.good,
     required this.easy,
     this.focusEnded = false,
+    this.isChallenge = false,
   });
   final int hard;
   final int good;
   final int easy;
   final bool focusEnded;
+
+  /// آیا این جمع‌بندی متعلق به چالش روزانه است؟
+  final bool isChallenge;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -569,12 +575,20 @@ class _SummaryView extends ConsumerWidget {
           Text(focusEnded ? '🔥' : '🎉', style: const TextStyle(fontSize: 56)),
           const SizedBox(height: 16),
           Text(
-            focusEnded ? 'زمان تمرکز تمام شد!' : 'آفرین! مرور تمام شد',
+            focusEnded
+                ? 'زمان تمرکز تمام شد!'
+                : isChallenge
+                    ? 'چالش امروز کامل شد!'
+                    : 'آفرین! مرور تمام شد',
             style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w700),
           ),
           const SizedBox(height: 8),
           Text('${Fa.digits(total)} کارت رو مرور کردی',
               style: TextStyle(color: context.colors.textSecondary)),
+          if (isChallenge) ...[
+            const SizedBox(height: 12),
+            _ChallengeStreak(),
+          ],
           const SizedBox(height: 24),
           _GoalProgress(done: todayReviewed, goal: goal),
           const SizedBox(height: 28),
@@ -602,6 +616,37 @@ class _SummaryView extends ConsumerWidget {
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+/// نشان استریک چالش روزانه در جمع‌بندی.
+class _ChallengeStreak extends ConsumerWidget {
+  const _ChallengeStreak();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final settings = ref.watch(settingsProvider);
+    final streak = settings.challengeStreak;
+    final best = settings.challengeBestStreak;
+    final c = context.colors;
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+      decoration: BoxDecoration(
+        color: c.amber.withValues(alpha: 0.12),
+        borderRadius: BorderRadius.circular(100),
+        border: Border.all(color: c.amber.withValues(alpha: 0.4)),
+      ),
+      child: Text(
+        best > streak
+            ? '🔥 استریک چالش: ${Fa.digits(streak)} روز — رکورد: ${Fa.digits(best)}'
+            : '🔥 استریک چالش: ${Fa.digits(streak)} روز',
+        style: TextStyle(
+          fontSize: 13,
+          fontWeight: FontWeight.w600,
+          color: c.amber,
+        ),
       ),
     );
   }

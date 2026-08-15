@@ -12,6 +12,7 @@ import '../../domain/gamification.dart';
 import '../../domain/study_stats.dart';
 import '../../providers/providers.dart';
 import '../review/review_controller.dart';
+import 'daily_challenge_card.dart';
 
 /// صفحه‌ی خانه — اولین چیزی که کاربر هر روز می‌بیند.
 class HomePage extends ConsumerStatefulWidget {
@@ -69,6 +70,8 @@ class _HomePageState extends ConsumerState<HomePage> {
             const SizedBox(height: 12),
             _StreakRow(days: stats.weekDays),
             const SizedBox(height: 24),
+            const DailyChallengeCard(),
+            const SizedBox(height: 12),
             _StartReviewButton(dueCount: due),
             if (weakCount > 0) ...[
               const SizedBox(height: 12),
@@ -445,7 +448,7 @@ class _WeakPointsButton extends StatelessWidget {
                 ),
               ),
             ),
-            Icon(Icons.chevron_left_rounded, color: c.amber),
+            Icon(Icons.chevron_right_rounded, color: c.amber),
           ],
         ),
       ),

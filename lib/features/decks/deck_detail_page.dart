@@ -1,11 +1,16 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:path_provider/path_provider.dart';
+import 'package:share_plus/share_plus.dart';
 
 import '../../core/persian.dart';
 import '../../core/services/freemium_service.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/widgets/math_text.dart';
+import '../../data/models/deck.dart';
 import '../../data/models/flashcard.dart';
 import '../../features/premium/premium_dialog.dart';
 import '../../providers/providers.dart';
@@ -31,6 +36,13 @@ class DeckDetailPage extends ConsumerWidget {
       appBar: AppBar(
         title: Text(deck?.title ?? 'دک'),
         actions: [
+          IconButton(
+            icon: const Icon(Icons.share_outlined),
+            tooltip: 'اشتراک‌گذاری دک',
+            onPressed: deck == null
+                ? null
+                : () => _shareDeck(context, ref, deck),
+          ),
           IconButton(
             icon: const Icon(Icons.quiz_outlined),
             tooltip: 'آزمون چندگزینه‌ای',
@@ -142,6 +154,39 @@ class DeckDetailPage extends ConsumerWidget {
     if (ok == true && context.mounted) {
       await ref.read(deckRepositoryProvider).delete(deckId);
       if (context.mounted) context.pop();
+    }
+  }
+
+  /// اشتراک‌گذاری دک به‌صورت فایل JSON.
+  Future<void> _shareDeck(
+      BuildContext context, WidgetRef ref, Deck deck) async {
+    try {
+      final service = ref.read(deckShareServiceProvider);
+      final share = await service.exportDeck(deckId: deckId);
+
+      // ذخیره در فایل موقت و اشتراک‌گذاری.
+      final dir = await getTemporaryDirectory();
+      final safeName = deck.title
+          .replaceAll(RegExp(r'[^\u0600-\u06FFa-zA-Z0-9]'), '_');
+      final file = File('${dir.path}/yadyar_deck_$safeName.json');
+      await file.writeAsString(share.toJson());
+
+      final xFile = XFile(file.path, name: 'yadyar_deck_$safeName.json');
+      await SharePlus.instance.share(
+        ShareParams(
+          files: [xFile],
+          text: 'دک «${deck.title}» — ${Fa.digits(share.cards.length)} کارت',
+        ),
+      );
+    } catch (e) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('خطا در اشتراک‌گذاری: $e'),
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      }
     }
   }
 }

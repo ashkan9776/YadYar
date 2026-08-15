@@ -11,6 +11,7 @@ import '../../data/models/flashcard.dart';
 import '../../data/models/rating.dart';
 import '../../data/models/review_log.dart';
 import '../../domain/answer_match.dart';
+import '../../domain/daily_challenge.dart';
 import '../../domain/sm2.dart';
 import '../../domain/weak_cards.dart';
 import '../../providers/providers.dart';
@@ -154,6 +155,10 @@ class ReviewController extends StateNotifier<ReviewState> {
       final cards = await cardRepo.getAll();
       final logs = await _ref.read(reviewRepositoryProvider).getAll();
       queue = WeakCards.select(cards, logs);
+    } else if (deckId == kDailyChallenge) {
+      // چالش روزانه: کارت‌های قطعیِ امروز از همه‌ی دک‌ها، فارغ از سررسید.
+      final cards = await cardRepo.getAll();
+      queue = DailyChallenge.selectDailyCards(cards, now);
     } else {
       final all = deckId == kAllDecks
           ? await cardRepo.getAll()
@@ -251,6 +256,19 @@ class ReviewController extends StateNotifier<ReviewState> {
       typedAnswer: '',
       typedCorrect: false,
     );
+
+    // چالش روزانه: پاسخ به آخرین کارت = کامل‌شدن چالش → ثبت استریک.
+    if (deckId == kDailyChallenge && state.index >= state.cards.length) {
+      _markChallengeCompleted();
+    }
+  }
+
+  /// ثبت کامل‌شدن چالش امروز در تنظیمات (استریک + روز آخر).
+  /// یکنواخت است — ثبت دوباره در همان روز تغییری ایجاد نمی‌کند.
+  Future<void> _markChallengeCompleted() async {
+    final repo = _ref.read(settingsRepositoryProvider);
+    final current = _ref.read(settingsProvider);
+    await repo.save(DailyChallenge.markCompleted(current, DateTime.now()));
   }
 
   /// لغو آخرین ارزیابی: بازگرداندن کارت به وضعیت قبلی و حذف لاگ آن.

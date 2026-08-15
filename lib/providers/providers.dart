@@ -13,6 +13,7 @@ import '../data/repositories/category_repository.dart';
 import '../data/repositories/deck_repository.dart';
 import '../data/repositories/review_repository.dart';
 import '../data/repositories/settings_repository.dart';
+import '../data/services/deck_share_service.dart';
 import '../domain/activity.dart';
 import '../domain/gamification.dart';
 import '../domain/study_stats.dart';
@@ -45,6 +46,14 @@ final reviewRepositoryProvider = Provider<ReviewRepository>(
 
 final settingsRepositoryProvider = Provider<SettingsRepository>(
   (ref) => SettingsRepository(ref.watch(databaseProvider)),
+);
+
+/// سرویس اشتراک‌گذاری دک.
+final deckShareServiceProvider = Provider<DeckShareService>(
+  (ref) => DeckShareService(
+    ref.watch(deckRepositoryProvider),
+    ref.watch(cardRepositoryProvider),
+  ),
 );
 
 /// جریان زنده‌ی تنظیمات کاربر.

@@ -291,7 +291,7 @@ class SettingsPage extends ConsumerWidget {
                   ),
                 ),
                 trailing: Icon(
-                  Icons.chevron_left_rounded,
+                  Icons.chevron_right_rounded,
                   color: context.colors.textMuted,
                 ),
               ),

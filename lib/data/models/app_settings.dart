@@ -14,6 +14,9 @@ class AppSettings {
     this.hapticsEnabled = true,
     this.isPro = false,
     this.proActivatedAt,
+    this.challengeStreak = 0,
+    this.challengeBestStreak = 0,
+    this.lastChallengeDay,
   });
 
   /// آیا یادآوری روزانه فعال است؟
@@ -44,6 +47,15 @@ class AppSettings {
   /// تاریخ فعال‌سازی نسخه حرفه‌ای (null = فعال نشده).
   final DateTime? proActivatedAt;
 
+  /// استریک فعلی چالش روزانه (روزهای پشت‌سرهم).
+  final int challengeStreak;
+
+  /// بهترین استریک چالش روزانه تا به حال.
+  final int challengeBestStreak;
+
+  /// کلید روز آخرین چالش کامل‌شده ('yyyy-mm-dd' — null = هیچ‌وقت).
+  final String? lastChallengeDay;
+
   static const defaults = AppSettings();
 
   AppSettings copyWith({
@@ -57,6 +69,9 @@ class AppSettings {
     bool? hapticsEnabled,
     bool? isPro,
     DateTime? proActivatedAt,
+    int? challengeStreak,
+    int? challengeBestStreak,
+    String? lastChallengeDay,
   }) {
     return AppSettings(
       reminderEnabled: reminderEnabled ?? this.reminderEnabled,
@@ -69,6 +84,9 @@ class AppSettings {
       hapticsEnabled: hapticsEnabled ?? this.hapticsEnabled,
       isPro: isPro ?? this.isPro,
       proActivatedAt: proActivatedAt ?? this.proActivatedAt,
+      challengeStreak: challengeStreak ?? this.challengeStreak,
+      challengeBestStreak: challengeBestStreak ?? this.challengeBestStreak,
+      lastChallengeDay: lastChallengeDay ?? this.lastChallengeDay,
     );
   }
 
@@ -83,6 +101,9 @@ class AppSettings {
     'hapticsEnabled': hapticsEnabled,
     'isPro': isPro,
     'proActivatedAt': proActivatedAt?.toIso8601String(),
+    'challengeStreak': challengeStreak,
+    'challengeBestStreak': challengeBestStreak,
+    'lastChallengeDay': lastChallengeDay,
   };
 
   factory AppSettings.fromMap(Map<String, Object?> map) => AppSettings(
@@ -101,5 +122,8 @@ class AppSettings {
     proActivatedAt: map['proActivatedAt'] != null
         ? DateTime.tryParse(map['proActivatedAt'] as String)
         : null,
+    challengeStreak: (map['challengeStreak'] as int?) ?? 0,
+    challengeBestStreak: (map['challengeBestStreak'] as int?) ?? 0,
+    lastChallengeDay: map['lastChallengeDay'] as String?,
   );
 }
