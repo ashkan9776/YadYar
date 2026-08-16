@@ -389,39 +389,43 @@ class _PremiumCardState extends ConsumerState<_PremiumCard> {
     final date = widget.settings.proActivatedAt;
     final dateStr = date != null ? Fa.fullDate(date) : '';
 
-    return Row(
-      children: [
-        const Icon(
-          Icons.workspace_premium_rounded,
-          color: Colors.amber,
-          size: 32,
-        ),
-        const SizedBox(width: 12),
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                'نسخه حرفه‌ای فعال است',
-                style: TextStyle(
-                  fontSize: 15,
-                  fontWeight: FontWeight.w600,
-                  color: context.colors.textPrimary,
-                ),
-              ),
-              if (dateStr.isNotEmpty)
+    return InkWell(
+      onTap: () => showProStatusDialog(context, widget.settings),
+      borderRadius: BorderRadius.circular(8),
+      child: Row(
+        children: [
+          const Icon(
+            Icons.workspace_premium_rounded,
+            color: Colors.amber,
+            size: 32,
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
                 Text(
-                  'از $dateStr',
+                  'نسخه حرفه‌ای فعال است',
                   style: TextStyle(
-                    fontSize: 12,
-                    color: context.colors.textMuted,
+                    fontSize: 15,
+                    fontWeight: FontWeight.w600,
+                    color: context.colors.textPrimary,
                   ),
                 ),
-            ],
+                if (dateStr.isNotEmpty)
+                  Text(
+                    'از $dateStr — مشاهده ویژگی‌ها',
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: context.colors.textMuted,
+                    ),
+                  ),
+              ],
+            ),
           ),
-        ),
-        Icon(Icons.check_circle_rounded, color: context.colors.teal, size: 24),
-      ],
+          Icon(Icons.chevron_right_rounded, color: context.colors.teal, size: 24),
+        ],
+      ),
     );
   }
 
@@ -451,7 +455,7 @@ class _PremiumCardState extends ConsumerState<_PremiumCard> {
         ),
         const SizedBox(height: 8),
         Text(
-          'محدودیت‌ها را بردارید: دسته‌بندی، کتاب و دک نامحدود، تا ۵۰ کارت به ازای هر دک.',
+          'محدودیت‌ها را بردارید: دسته‌بندی، کتاب، دک و کارت نامحدود + چالش روزانه.',
           style: TextStyle(
             fontSize: 12,
             color: context.colors.textSecondary,

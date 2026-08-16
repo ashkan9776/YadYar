@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../core/persian.dart';
 import '../../core/services/purchase_service.dart';
 import '../../core/theme/app_colors.dart';
+import '../../data/models/app_settings.dart';
 import '../../providers/providers.dart';
 
 /// نمایش دیالوگ خرید نسخه حرفه‌ای.
@@ -14,6 +16,120 @@ Future<void> showPremiumDialog(
   String reason = '',
 }) {
   return showDialog(context: context, builder: (ctx) => const _PremiumDialog());
+}
+
+/// نمایش دیالوگ وضعیت و ویژگی‌های فعال نسخه حرفه‌ای برای کاربر پرو.
+Future<void> showProStatusDialog(BuildContext context, AppSettings settings) {
+  return showDialog(
+    context: context,
+    builder: (ctx) => _ProStatusDialog(settings: settings),
+  );
+}
+
+class _ProStatusDialog extends StatelessWidget {
+  const _ProStatusDialog({required this.settings});
+  final AppSettings settings;
+
+  @override
+  Widget build(BuildContext context) {
+    final palette = context.colors;
+    final date = settings.proActivatedAt;
+
+    return Dialog(
+      backgroundColor: palette.bg2,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(20),
+        side: BorderSide(color: palette.border2, width: 1.5),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // نشان فعال بودن
+            Container(
+              width: 64,
+              height: 64,
+              decoration: BoxDecoration(
+                color: Colors.amber.withValues(alpha: 0.15),
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(
+                Icons.workspace_premium_rounded,
+                size: 36,
+                color: Colors.amber,
+              ),
+            ),
+            const SizedBox(height: 16),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Text(
+                  'نسخه حرفه‌ای فعال است',
+                  style: TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.w700,
+                    color: palette.textPrimary,
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Icon(Icons.check_circle_rounded,
+                    color: palette.teal, size: 22),
+              ],
+            ),
+            if (date != null) ...[
+              const SizedBox(height: 6),
+              Text(
+                'از ${Fa.fullDate(date)}',
+                style: TextStyle(
+                  fontSize: 13,
+                  color: palette.textMuted,
+                ),
+              ),
+            ],
+            const SizedBox(height: 20),
+
+            // ویژگی‌های فعال
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: palette.bg,
+                borderRadius: BorderRadius.circular(14),
+              ),
+              child: Column(
+                children: [
+                  _BenefitRow(
+                    Icons.all_inclusive_rounded,
+                    'دسته‌بندی، کتاب و دک نامحدود',
+                  ),
+                  const SizedBox(height: 10),
+                  _BenefitRow(Icons.style_rounded, 'کارت نامحدود در هر دک'),
+                  const SizedBox(height: 10),
+                  _BenefitRow(Icons.block_rounded, 'بدون تبلیغات'),
+                  const SizedBox(height: 10),
+                  _BenefitRow(
+                    Icons.local_fire_department_rounded,
+                    'چالش روزانه با استریک مخصوص 🔥',
+                  ),
+                  const SizedBox(height: 10),
+                  _BenefitRow(Icons.sync_rounded, 'اشتراک‌گذاری و ایمپورت دک'),
+                ],
+              ),
+            ),
+            const SizedBox(height: 20),
+            SizedBox(
+              width: double.infinity,
+              child: TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: const Text('بستن'),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
 }
 
 class _PremiumDialog extends ConsumerStatefulWidget {
@@ -92,7 +208,7 @@ class _PremiumDialogState extends ConsumerState<_PremiumDialog> {
                     'دسته‌بندی، کتاب و دک نامحدود',
                   ),
                   const SizedBox(height: 10),
-                  _BenefitRow(Icons.style_rounded, 'تا ۵۰ کارت به ازای هر دک'),
+                  _BenefitRow(Icons.style_rounded, 'کارت نامحدود در هر دک'),
                   const SizedBox(height: 10),
                   _BenefitRow(Icons.block_rounded, 'بدون تبلیغات'),
                   const SizedBox(height: 10),

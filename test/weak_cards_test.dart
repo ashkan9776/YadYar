@@ -13,18 +13,19 @@ FlashCard _card(int id, {double ease = 2.5, int reps = 1}) => FlashCard(
       repetitions: reps,
     );
 
-ReviewLog _log(int cardId, int quality) => ReviewLog(
+/// دقیقه‌ها ترتیب زمانی لاگ‌ها را مشخص می‌کنند.
+ReviewLog _log(int cardId, int quality, {int min = 0}) => ReviewLog(
       cardId: cardId,
       deckId: 1,
       quality: quality,
-      reviewedAt: DateTime(2026),
+      reviewedAt: DateTime(2026, 1, 1).add(Duration(minutes: min)),
       durationMs: 1000,
     );
 
 void main() {
-  test('کارت با دو بار «سخت» ضعیف شمرده می‌شود', () {
+  test('کارت با دو «سخت» متوالی ضعیف شمرده می‌شود', () {
     final cards = [_card(1), _card(2)];
-    final logs = [_log(1, 3), _log(1, 3), _log(2, 5)];
+    final logs = [_log(1, 3, min: 1), _log(1, 3, min: 2), _log(2, 5)];
     final weak = WeakCards.select(cards, logs);
     expect(weak.map((c) => c.id), [1]);
   });
@@ -41,14 +42,59 @@ void main() {
     expect(weak, isEmpty);
   });
 
-  test('ضعیف‌ترها بر اساس تعداد «سخت» مرتب می‌شوند', () {
+  test('ضعیف‌ترها بر اساس «سخت»های متوالی مرتب می‌شوند', () {
     final cards = [_card(1), _card(2), _card(3)];
     final logs = [
-      _log(1, 3), _log(1, 3), // ۲ سخت
-      _log(2, 3), _log(2, 3), _log(2, 3), // ۳ سخت
-      _log(3, 3), _log(3, 3), // ۲ سخت
+      _log(1, 3, min: 1), _log(1, 3, min: 2), // ۲ سخت متوالی
+      _log(2, 3, min: 3), _log(2, 3, min: 4), _log(2, 3, min: 5), // ۳ سخت متوالی
+      _log(3, 3, min: 6), _log(3, 3, min: 7), // ۲ سخت متوالی
     ];
     final weak = WeakCards.select(cards, logs);
-    expect(weak.first.id, 2); // بیشترین «سخت» اول
+    expect(weak.first.id, 2); // بیشترین «سخت» متوالی اول
+  });
+
+  group('خروج از نقاط ضعف پس از مرور موفق', () {
+    test('مرور خوب بعد از سخت‌ها، ریست می‌کند و کارت ضعیف نیست', () {
+      final cards = [_card(1)];
+      final logs = [
+        _log(1, 3, min: 1),
+        _log(1, 3, min: 2),
+        _log(1, 4, min: 3), // مرور موفق → ریست
+      ];
+      expect(WeakCards.select(cards, logs), isEmpty);
+    });
+
+    test('سخت‌های قدیمی قبل از آخرین مرور موفق حساب نمی‌شوند', () {
+      final cards = [_card(1)];
+      final logs = [
+        _log(1, 3, min: 1),
+        _log(1, 3, min: 2),
+        _log(1, 5, min: 3), // آسون → ریست
+        _log(1, 3, min: 4), // فقط یک سخت اخیر
+      ];
+      // یک سختِ اخیر + ضریب پایین ضعیف است؛ با ضریب بالا (۲.۵) نه.
+      expect(WeakCards.select(cards, logs), isEmpty);
+    });
+
+    test('سختِ اخیر با ضریب پایین همچنان ضعیف است', () {
+      final cards = [_card(1, ease: 2.0)];
+      final logs = [
+        _log(1, 3, min: 1),
+        _log(1, 4, min: 2), // ریست
+        _log(1, 3, min: 3), // یک سخت اخیر + ضریب ۲.۰
+      ];
+      final weak = WeakCards.select(cards, logs);
+      expect(weak.map((c) => c.id), [1]);
+    });
+
+    test('لاگ‌ها با ترتیب ورودی به‌هم‌ریخته هم درست حساب می‌شوند', () {
+      final cards = [_card(1)];
+      final logs = [
+        _log(1, 4, min: 5), // آخر از همه: موفق → ریست
+        _log(1, 3, min: 1),
+        _log(1, 3, min: 2),
+      ];
+      expect(WeakCards.select(cards, logs), isEmpty);
+    });
   });
 }

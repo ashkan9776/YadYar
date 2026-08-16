@@ -33,6 +33,14 @@ android {
         targetSdk = 36
         versionCode = flutter.versionCode
         versionName = flutter.versionName
+        // فقط معماری‌های واقعی گوشی‌ها — x86_64 فقط برای شبیه‌ساز است و
+        // حدود ۲۲ مگابایت به APK اضافه می‌کند. پلاگین Flutter در ابتدا هر سه
+        // معماری را ست می‌کند؛ با clear() بازنویسی‌اش می‌کنیم. برای دیباگ روی
+        // شبیه‌ساز x86_64 این بلوک را موقتاً کامنت کن.
+        ndk {
+            abiFilters.clear()
+            abiFilters.addAll(listOf("armeabi-v7a", "arm64-v8a"))
+        }
     }
 
     signingConfigs {
